@@ -46,9 +46,9 @@ typedef struct
     int session_id;
     int width, height;
     CellType cells[MAX_FIELD][MAX_FIELD];
-    Position goals[MAX_BOXES];
+    Position goals[MAX_BOXES]; // куда ставить
     int num_boxes;
-    Position boxes[MAX_BOXES];
+    Position boxes[MAX_BOXES]; // откуда двигать
     Position player;
     Difficulty difficulty;
     int step_count;

@@ -39,7 +39,7 @@ static void RandomWalk(Level *const level)
     }
 }
 
-void FloodFill(Level *const level, int x, int y, int visited[MAX_FIELD][MAX_FIELD])
+static void FloodFill(Level *const level, int x, int y, int visited[MAX_FIELD][MAX_FIELD])
 { // mark the field like flood (ret 1 if all cells are available)
     if (x < 0 || x >= level->width || y < 0 || y >= level->height) return;
     if (visited[y][x] || level->cells[y][x] == CELL_WALL) return;
@@ -51,7 +51,7 @@ void FloodFill(Level *const level, int x, int y, int visited[MAX_FIELD][MAX_FIEL
     FloodFill(level, x, y - 1, visited);
 }
 
-int IsConnected(Level *const level)
+static int IsConnected(Level *const level)
 { // check for passability 
     int visited[MAX_FIELD][MAX_FIELD] = {0};
 
@@ -83,6 +83,106 @@ int IsConnected(Level *const level)
     }
 
     return 1;
+}
+
+static int Distance(Position a, Position b)
+{ // calculate the distance
+    return abs(a.x - b.x) + abs(a.y - b.y);
+}
+
+static int PlaceGoalsAndBoxes(Level *const level)
+{ // just place goal num of boxes (ret count of placed)
+    int placed = 0;
+    int attempts = 0;
+
+    while (placed < level->num_boxes && attempts < 1000)
+    {
+        attempts++;
+        int x = rand() % level->width;
+        int y = rand() % level->height;
+
+        if (level->cells[y][x] != CELL_FLOOR) continue;
+
+        int too_close = 0;
+        for (int i = 0; i < placed; i++)
+        {
+            Position p = {x, y};
+            if (Distance(p, level->goals[i]) < 2)
+            {
+                too_close = 1;
+                break;
+            }
+        }
+        if (too_close) continue;
+
+        level->goals[placed].x = x;
+        level->goals[placed].y = y;
+        level->boxes[placed].x = x;
+        level->boxes[placed].y = y;
+        placed++;
+    }
+    return placed == level->num_boxes;
+}
+
+static void ReverseSolve(Level *const level, int target_moves)
+{ // place boxes on start positions
+    int last_box = -1;
+    int same_box_count = 0;
+
+    for (int i = 0; i < target_moves; i++)
+    {
+        int attempts = 0;
+        while (attempts < 20)
+        {
+            attempts++;
+            
+            int box_idx = rand() % level->num_boxes;
+            if (box_idx == last_box) // чтобы не двигать один бокс вечно
+            {
+                same_box_count++;
+                if (same_box_count > 5)
+                {
+                    continue;
+                }
+                else
+                {
+                    same_box_count = 0;
+                }
+            }
+
+            int dir = rand() % 4;
+            int bx = level->boxes[box_idx].x;
+            int by = level->boxes[box_idx].y;
+
+            int new_bx = bx - DX[dir];
+            int new_by = by - DY[dir];
+
+            int px = bx + DX[dir];
+            int py = by + DY[dir];
+
+            if (new_bx <= 0 || new_bx >= level->width - 1) continue;
+            if (new_by <= 0 || new_by >= level->height - 1) continue;
+            if (level->cells[new_by][new_bx] != CELL_FLOOR) continue;
+            if (level->cells[py][px] != CELL_FLOOR) continue;
+
+            int occupied = 0;
+            for (int j = 0; j < level->num_boxes; j++) {
+                if (j == box_idx) continue;
+                if (level->boxes[j].x == new_bx && level->boxes[j].y == new_by) {
+                    occupied = 1;
+                    break;
+                }
+            }
+            if (occupied) continue;
+
+            level->boxes[box_idx].x = new_bx;
+            level->boxes[box_idx].y = new_by;
+            level->player.x = bx;
+            level->player.y = by;
+            last_box = box_idx;
+            break;
+        }
+    }
 }
 
 Level GenerateLevel(Difficulty difficulty)
@@ -123,10 +223,20 @@ Level GenerateLevel(Difficulty difficulty)
 
         RandomWalk(&level);
 
-        if (IsConnected(&level))
+        if (!IsConnected(&level)) continue;
+
+        if (!PlaceGoalsAndBoxes(&level)) continue;
+
+        int target_moves;
+        switch (difficulty)
         {
-            valid = 1;
+            case DIFF_EASY:   target_moves = 15 + rand() % 16; break; // 15-30
+            case DIFF_MEDIUM: target_moves = 40 + rand() % 31; break; // 40-70
+            case DIFF_HARD:   target_moves = 80 + rand() % 41; break; // 80-120
         }
+
+        ReverseSolve(&level, target_moves);
+        valid = 1;
     }
 
     return level;
