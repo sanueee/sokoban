@@ -9,9 +9,9 @@ static const int DY[4] = {-1, 1, 0, 0};
 
 
 static void RandomWalk(Level *const level)
-{ // сhecks the corridors.
+{ // makes the corridors.
     int total_square = (level->height - 2) * (level->width - 2);
-    int target = total_square * 0.6;
+    int target = total_square * 0.4;
     int free_count = 0;
 
     int x = level->width / 2;
@@ -19,14 +19,21 @@ static void RandomWalk(Level *const level)
     level->cells[y][x] = CELL_FLOOR;
     free_count++;
 
+    int prev_dir = -1;
     while (free_count < target)
     {
         int dir = rand() % 4;
+        // с вероятностью 60% продолжаем в том же направлении — создаёт коридоры
+        if (prev_dir >= 0 && rand() % 100 < 60) {
+            dir = prev_dir;
+        } else {
+            dir = rand() % 4;
+        }
         int nx = x + DX[dir];
         int ny = y + DY[dir];
 
-        if (nx > 0 && nx < level->width &&
-            ny > 0 && ny < level->height)
+        if (nx > 1 && nx < level->width - 2 &&
+            ny > 1 && ny < level->height - 2)
         {
             x = nx;
             y = ny;
@@ -35,6 +42,10 @@ static void RandomWalk(Level *const level)
                 level->cells[y][x] = CELL_FLOOR;
                 free_count++;
             }
+        }
+        else
+        {
+            prev_dir = -1;
         }
     }
 }
@@ -102,40 +113,6 @@ static int IsConnected(Level *const level)
 static int Distance(Position a, Position b)
 { // calculates the distance.
     return abs(a.x - b.x) + abs(a.y - b.y);
-}
-
-static int PlaceGoalsAndBoxes(Level *const level)
-{ // just place goal num of boxes (ret count of placed).
-    int placed = 0;
-    int attempts = 0;
-
-    while (placed < level->num_boxes && attempts < 1000)
-    {
-        attempts++;
-        int x = rand() % level->width;
-        int y = rand() % level->height;
-
-        if (level->cells[y][x] != CELL_FLOOR) continue;
-
-        int too_close = 0;
-        for (int i = 0; i < placed; i++)
-        {
-            Position p = {x, y};
-            if (Distance(p, level->goals[i]) < 2)
-            {
-                too_close = 1;
-                break;
-            }
-        }
-        if (too_close) continue;
-
-        level->goals[placed].x = x;
-        level->goals[placed].y = y;
-        level->boxes[placed].x = x;
-        level->boxes[placed].y = y;
-        placed++;
-    }
-    return placed == level->num_boxes;
 }
 
 // places boxes on start positions.
@@ -211,6 +188,51 @@ static int IsCornerDeadlock(Level *const level, Position box)
            (wall_up && wall_right) ||
            (wall_down && wall_left)||
            (wall_down && wall_right);
+}
+
+static int PlaceGoalsAndBoxes(Level *const level)
+{ // just place goal num of boxes (ret count of placed).
+    int placed = 0;
+    int attempts = 0;
+    int min_goal_dist = (level->num_boxes <= 4) ? 3 : 2;
+
+    while (placed < level->num_boxes && attempts < 1000)
+    {
+        attempts++;
+        int x = rand() % level->width;
+        int y = rand() % level->height;
+
+        if (level->cells[y][x] != CELL_FLOOR) continue;
+
+        // не ставить в углах — сразу дедлок
+        int walls = 0;
+        for (int d = 0; d < 4; d++)
+            if (level->cells[y + DY[d]][x + DX[d]] == CELL_WALL) walls++;
+        if (walls >= 2) {
+            // проверка на угловой дедлок
+            Position p = {x, y};
+            if (IsCornerDeadlock(level, p)) continue;
+        }
+        
+        int too_close = 0;
+        for (int i = 0; i < placed; i++)
+        {
+            Position p = {x, y};
+            if (Distance(p, level->goals[i]) < 2)
+            {
+                too_close = 1;
+                break;
+            }
+        }
+        if (too_close) continue;
+
+        level->goals[placed].x = x;
+        level->goals[placed].y = y;
+        level->boxes[placed].x = x;
+        level->boxes[placed].y = y;
+        placed++;
+    }
+    return placed == level->num_boxes;
 }
 
 static int IsOnGoal(Level *level, Position box)
@@ -310,7 +332,34 @@ Level GenerateLevel(Difficulty difficulty)
             case DIFF_HARD:   target_moves = 80 + rand() % 41; break; // 80-120
         }
 
+        int player_placed = 0;
+        for (int a = 0; a < 500 && !player_placed; a++) {
+            int px = 1 + rand() % (level.width - 2);
+            int py = 1 + rand() % (level.height - 2);
+            if (level.cells[py][px] != CELL_FLOOR) continue;
+
+            int on_box = 0;
+            for (int i = 0; i < level.num_boxes; i++)
+                if (level.boxes[i].x == px && level.boxes[i].y == py) { on_box = 1; break; }
+            if (on_box) continue;
+
+            level.player.x = px;
+            level.player.y = py;
+            player_placed = 1;
+        }
+        if (!player_placed) continue;
+
         ReverseSolve(&level, target_moves);
+
+        int min_dist = (difficulty == DIFF_EASY) ? 3 : (difficulty == DIFF_MEDIUM) ? 5 : 7;
+        int too_close = 0;
+        for (int i = 0; i < level.num_boxes; i++) {
+            if (Distance(level.boxes[i], level.goals[i]) < min_dist) {
+                too_close = 1;
+                break;
+            }
+        }
+        if (too_close) continue;
 
         if (HasDeadlock(&level)) continue;
         if (!AllBoxesReachable(&level)) continue;

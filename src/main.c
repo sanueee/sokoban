@@ -16,10 +16,12 @@ int main(void)
     {
         HandleInput(&level);
 
+        /*
         if (CheckWin(&level)) {
             // пока просто закрываем окно
             break;
         }
+        */
 
         BeginDrawing();
         ClearBackground(BLACK);
