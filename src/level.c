@@ -7,75 +7,87 @@
 static const int DX[4] = {0, 0, -1, 1};
 static const int DY[4] = {-1, 1, 0, 0};
 
+static int HasBox(Level *level, int x, int y)
+{ // check is box
+    for (int i = 0; i < level->num_boxes; i++)
+        if (level->boxes[i].x == x && level->boxes[i].y == y) return 1;
+    return 0;
+}
 
-static void RandomWalk(Level *const level)
-{ // makes the corridors.
-    int total_square = (level->height - 2) * (level->width - 2);
-    int target = total_square * 0.4;
-    int free_count = 0;
-
-    int x = level->width / 2;
-    int y = level->height / 2;
-    level->cells[y][x] = CELL_FLOOR;
-    free_count++;
-
-    int prev_dir = -1;
-    while (free_count < target)
+static void ShuffleDirs(int *dirs)
+{ // shuffle directions
+    for (int i = 0; i < 4; i++)
     {
-        int dir = rand() % 4;
-        // с вероятностью 60% продолжаем в том же направлении — создаёт коридоры
-        if (prev_dir >= 0 && rand() % 100 < 60) {
-            dir = prev_dir;
-        } else {
-            dir = rand() % 4;
-        }
-        int nx = x + DX[dir];
-        int ny = y + DY[dir];
+        int r = rand() % 4;
+        int temp = dirs[i];
+        dirs[i] = dirs[r];
+        dirs[r] = temp;
+    }
+}
 
-        if (nx > 1 && nx < level->width - 2 &&
-            ny > 1 && ny < level->height - 2)
+static void CarveMaze(Level *level, int x, int y)
+{ // Recursive Backtracker for corridors 1x1
+    level->cells[y][x] = CELL_FLOOR;
+
+    int dirs[] = {0, 1, 2, 3};
+    ShuffleDirs(dirs);
+
+    for (int i = 0; i < 4; i++)
+    {
+        int dx = DX[dirs[i]];
+        int dy = DY[dirs[i]];
+
+        // cмотрим на 2 клетки вперед, чтобы оставлять стены между коридорами
+        int nx = x + dx * 2;
+        int ny = y + dy * 2;
+
+        // если клетка в пределах карты и всё ещё стена — копаем к ней
+        if (nx > 0 && nx < level->width - 1 && ny > 0 && ny < level->height - 1)
         {
-            x = nx;
-            y = ny;
-            if (level->cells[y][x] == CELL_WALL)
+            if (level->cells[ny][nx] == CELL_WALL)
             {
-                level->cells[y][x] = CELL_FLOOR;
-                free_count++;
+                // ломаем стену между нами и целью
+                level->cells[y + dy][x + dx] = CELL_FLOOR;
+                // рекурсивно идем дальше
+                CarveMaze(level, nx, ny);
             }
-        }
-        else
-        {
-            prev_dir = -1;
         }
     }
 }
 
-static void FloodFill(Level *const level, int startX, int startY, int visited[MAX_FIELD][MAX_FIELD])
-{ // marks the field like flood (ret 1 if all cells are available).
-    typedef struct { int x, y; } Point;
-    Point stack[MAX_FIELD * MAX_FIELD];
-    int top = 0;
-
-    stack[top++] = (Point){startX, startY};
-    visited[startY][startX] = 1;
-
-    while (top > 0)
+static void GenerateMaze(Level *const level)
+{ // generating map
+    for (int y = 0; y < level->height; y++)
     {
-        Point p = stack[--top];
-        for (int d = 0; d < 4; d++)
+        for (int x = 0; x < level->width; x++)
         {
-            int nx = p.x + DX[d];
-            int ny = p.y + DY[d];
-            if (nx < 0 || nx >= level->width || ny < 0 || ny >= level->height) continue;
-            if (visited[ny][nx] || level->cells[ny][nx] == CELL_WALL) continue;
-            visited[ny][nx] = 1;
-            stack[top++] = (Point){nx, ny};
+            level->cells[y][x] = CELL_WALL;
+        }
+    }
+
+    // вырезаем лабиринт. обязательно начинаем с нечетных координат!
+    // иначе коридоры могут "прилипнуть" к краю карты.
+    int startX = 1 + (rand() % ((level->width - 2) / 2)) * 2;
+    int startY = 1 + (rand() % ((level->height - 2) / 2)) * 2;
+    CarveMaze(level, startX, startY);
+
+    // создаем "комнаты" и циклы.
+    // ломаем немного случайных стен, чтобы появились открытые пространства и обходные пути.
+    // количество сломанных стен зависит от размера карты (около 10% площади).
+    int extra_spaces = (level->width * level->height) / 10; 
+    
+    for (int i = 0; i < extra_spaces; i++) {
+        int rx = 1 + rand() % (level->width - 2);
+        int ry = 1 + rand() % (level->height - 2);
+        
+        if (level->cells[ry][rx] == CELL_WALL) {
+            level->cells[ry][rx] = CELL_FLOOR;
         }
     }
 }
 
 static void FloodFillWithBoxes(Level *level, int startX, int startY, int visited[MAX_FIELD][MAX_FIELD])
-{
+{ // checks for passability
     typedef struct { int x, y; } Point;
     Point stack[MAX_FIELD * MAX_FIELD];
     int top = 0;
@@ -91,13 +103,7 @@ static void FloodFillWithBoxes(Level *level, int startX, int startY, int visited
             int nx = p.x + DX[d];
             int ny = p.y + DY[d];
             if (nx < 0 || nx >= level->width || ny < 0 || ny >= level->height) continue;
-            if (visited[ny][nx] || level->cells[ny][nx] == CELL_WALL) continue;
-
-            // проверка на ящик
-            int is_box = 0;
-            for (int i = 0; i < level->num_boxes; i++)
-                if (level->boxes[i].x == nx && level->boxes[i].y == ny) { is_box = 1; break; }
-            if (is_box) continue;
+            if (visited[ny][nx] || level->cells[ny][nx] == CELL_WALL || HasBox(level, nx, ny)) continue;
 
             visited[ny][nx] = 1;
             stack[top++] = (Point){nx, ny};
@@ -105,207 +111,132 @@ static void FloodFillWithBoxes(Level *level, int startX, int startY, int visited
     }
 }
 
-static int IsConnected(Level *const level)
-{ // checks for passability.
-    int visited[MAX_FIELD][MAX_FIELD] = {0};
+static int IsCornerDeadlock(Level *const level, int x, int y)
+{ // is corner deadlock
+    int wall_up    = (level->cells[y - 1][x] == CELL_WALL);
+    int wall_down  = (level->cells[y + 1][x] == CELL_WALL);
+    int wall_left  = (level->cells[y][x - 1] == CELL_WALL);
+    int wall_right = (level->cells[y][x + 1] == CELL_WALL);
 
-    int startX = -1; int startY = -1;
-    for (int y = 0; y < level->height && startX == -1; y++) // search for start cell
-    {
-        for (int x = 0; x < level->width && startX == -1; x++)
-        {
-            if (level->cells[y][x] == CELL_FLOOR)
-            {
-                startX = x;
-                startY = y;
-            }
-        }
-    }
-    if (startX == -1) return 0;
-
-    FloodFill(level, startX, startY, visited);
-
-    for (int y = 0; y < level->height; y++)
-    {
-        for (int x = 0; x < level->width; x++)
-        {
-            if (level->cells[y][x] == CELL_FLOOR && !visited[y][x])
-            {
-                return 0;
-            }
-        }
-    }
-
-    return 1;
+    return (wall_up && wall_left)  || (wall_up && wall_right) ||
+           (wall_down && wall_left)|| (wall_down && wall_right);
 }
 
-static int Distance(Position a, Position b)
-{ // calculates the distance.
-    return abs(a.x - b.x) + abs(a.y - b.y);
-}
+static int IsDeadlock(Level *const level, Position box)
+{ // is deadlock
+    if (IsCornerDeadlock(level, box.x, box.y)) return 1;
 
-// places boxes on start positions.
-static void ReverseSolve(Level *level, int target_moves) {
-    int last_box = -1;
-    int same_box_count = 0;
+    // Проверка 2x2 блоков (стены + ящики), которые невозможно сдвинуть
+    int x = box.x, y = box.y;
+    int up = HasBox(level, x, y-1) || level->cells[y-1][x] == CELL_WALL;
+    int down = HasBox(level, x, y+1) || level->cells[y+1][x] == CELL_WALL;
+    int left = HasBox(level, x-1, y) || level->cells[y][x-1] == CELL_WALL;
+    int right = HasBox(level, x+1, y) || level->cells[y][x+1] == CELL_WALL;
 
-    for (int i = 0; i < target_moves; i++) {
-        // Считаем flood fill один раз на ход, а не на каждую попытку
-        int visited[MAX_FIELD][MAX_FIELD] = {0};
-        FloodFillWithBoxes(level, level->player.x, level->player.y, visited);
+    int ul = HasBox(level, x-1, y-1) || level->cells[y-1][x-1] == CELL_WALL;
+    int ur = HasBox(level, x+1, y-1) || level->cells[y-1][x+1] == CELL_WALL;
+    int dl = HasBox(level, x-1, y+1) || level->cells[y+1][x-1] == CELL_WALL;
+    int dr = HasBox(level, x+1, y+1) || level->cells[y+1][x+1] == CELL_WALL;
 
-        int moved = 0;
-        for (int attempts = 0; attempts < 100 && !moved; attempts++) {
-            int box_idx = rand() % level->num_boxes;
+    if (up && left && ul) return 1;
+    if (up && right && ur) return 1;
+    if (down && left && dl) return 1;
+    if (down && right && dr) return 1;
 
-            if (box_idx == last_box && ++same_box_count > 5) continue;
-            else if (box_idx != last_box) same_box_count = 0;
-
-            int dir = rand() % 4;
-            int bx = level->boxes[box_idx].x;
-            int by = level->boxes[box_idx].y;
-
-            int new_bx = bx - DX[dir];
-            int new_by = by - DY[dir];
-            int px = bx + DX[dir];
-            int py = by + DY[dir];
-
-            if (new_bx <= 0 || new_bx >= level->width - 1) continue;
-            if (new_by <= 0 || new_by >= level->height - 1) continue;
-            if (level->cells[new_by][new_bx] != CELL_FLOOR) continue;
-            if (px <= 0 || px >= level->width - 1) continue;
-            if (py <= 0 || py >= level->height - 1) continue;
-            if (level->cells[py][px] != CELL_FLOOR) continue;
-
-            int occupied = 0;
-            for (int j = 0; j < level->num_boxes; j++) {
-                if (j == box_idx) continue;
-                if (level->boxes[j].x == new_bx && level->boxes[j].y == new_by) {
-                    occupied = 1; break;
-                }
-            }
-            if (occupied) continue;
-
-            // используем уже посчитанный visited
-            if (!visited[py][px]) continue;
-
-            level->boxes[box_idx].x = new_bx;
-            level->boxes[box_idx].y = new_by;
-            level->player.x = bx;
-            level->player.y = by;
-            last_box = box_idx;
-            moved = 1;
-        }
-    }
-}
-
-static int IsCornerDeadlock(Level *const level, Position box)
-{ // сhecks whether a box is trapped in a corner by two walls along adjacent axes. such a box cannot be moved if it is not on target.
-    int wall_up    = (level->cells[box.y - 1][box.x] == CELL_WALL);
-    int wall_down  = (level->cells[box.y + 1][box.x] == CELL_WALL);
-    int wall_left  = (level->cells[box.y][box.x - 1] == CELL_WALL);
-    int wall_right = (level->cells[box.y][box.x + 1] == CELL_WALL);
-
-    return (wall_up && wall_left)  ||
-           (wall_up && wall_right) ||
-           (wall_down && wall_left)||
-           (wall_down && wall_right);
+    return 0;
 }
 
 static int PlaceGoalsAndBoxes(Level *const level)
-{ // just place goal num of boxes (ret count of placed).
+{ // places goals and boxes
     int placed = 0;
     int attempts = 0;
-    int min_goal_dist = (level->num_boxes <= 4) ? 3 : 2;
-
     while (placed < level->num_boxes && attempts < 1000)
     {
         attempts++;
-        int x = rand() % level->width;
-        int y = rand() % level->height;
+        int x = 2 + rand() % (level->width - 4);
+        int y = 2 + rand() % (level->height - 4);
 
         if (level->cells[y][x] != CELL_FLOOR) continue;
-
-        // не ставить в углах — сразу дедлок
-        int walls = 0;
-        for (int d = 0; d < 4; d++)
-            if (level->cells[y + DY[d]][x + DX[d]] == CELL_WALL) walls++;
-        if (walls >= 2) {
-            // проверка на угловой дедлок
-            Position p = {x, y};
-            if (IsCornerDeadlock(level, p)) continue;
-        }
         
+        if (IsCornerDeadlock(level, x, y)) continue;
+
         int too_close = 0;
         for (int i = 0; i < placed; i++)
         {
-            Position p = {x, y};
-            if (Distance(p, level->goals[i]) < 2)
+            if (abs(x - level->goals[i].x) + abs(y - level->goals[i].y) < 2)
             {
-                too_close = 1;
-                break;
+                too_close = 1; break;
             }
         }
         if (too_close) continue;
 
-        level->goals[placed].x = x;
-        level->goals[placed].y = y;
-        level->boxes[placed].x = x;
-        level->boxes[placed].y = y;
+        level->goals[placed] = (Position){x, y};
+        level->boxes[placed] = (Position){x, y};
         placed++;
     }
     return placed == level->num_boxes;
 }
 
+static void ReverseSolve(Level *level, int target_moves)
+{ // algorithm for checking solving
+    for (int i = 0; i < target_moves; i++)
+    {
+        int visited[MAX_FIELD][MAX_FIELD] = {0};
+        FloodFillWithBoxes(level, level->player.x, level->player.y, visited);
+
+        int moved = 0;
+        for (int attempts = 0; attempts < 100 && !moved; attempts++)
+        {
+            int box_idx = rand() % level->num_boxes;
+            int dir = rand() % 4;
+            
+            int bx = level->boxes[box_idx].x;
+            int by = level->boxes[box_idx].y;
+
+            // направление, куда мы тянем ящик. 
+            // значит, игрок должен стоять со стороны box - dir (pull_x, pull_y)
+            // и отступать на шаг назад в box - 2*dir (back_x, back_y)
+            int dx = DX[dir], dy = DY[dir];
+            int pull_x = bx - dx; int pull_y = by - dy;
+            int back_x = bx - 2 * dx; int back_y = by - 2 * dy;
+
+            // может ли игрок подойти к ящику для тяги
+            if (pull_x <= 0 || pull_x >= level->width - 1 || pull_y <= 0 || pull_y >= level->height - 1) continue;
+            if (!visited[pull_y][pull_x]) continue;
+
+            // есть ли место куда отступить
+            if (back_x <= 0 || back_x >= level->width - 1 || back_y <= 0 || back_y >= level->height - 1) continue;
+            if (level->cells[back_y][back_x] == CELL_WALL) continue;
+            if (HasBox(level, back_x, back_y)) continue;
+
+            level->boxes[box_idx].x = pull_x;
+            level->boxes[box_idx].y = pull_y;
+            level->player.x = back_x;
+            level->player.y = back_y;
+            moved = 1;
+        }
+    }
+}
+
 static int IsOnGoal(Level *level, Position box)
-{ // returns 1 if the box is located at one of the target positions.
+{ // is on goal
     for (int i = 0; i < level->num_boxes; i++)
-        if (level->goals[i].x == box.x && level->goals[i].y == box.y)
-            return 1;
+        if (level->goals[i].x == box.x && level->goals[i].y == box.y) return 1;
     return 0;
 }
 
 static int HasDeadlock(Level *level)
-{ // checks all the boxes on the corner deadlock. the boxes on the targets are skipped — they are already in place.
-  // returns 1 if at least one box is deadlocked.
+{ // checks for deadlocs (returns 1 if is)
     for (int i = 0; i < level->num_boxes; i++)
     {
         if (IsOnGoal(level, level->boxes[i])) continue;
-        if (IsCornerDeadlock(level, level->boxes[i])) return 1;
+        if (IsDeadlock(level, level->boxes[i])) return 1;
     }
     return 0;
 }
 
-static int AllBoxesReachable(Level *level)
-{ // checking possibility to reach box from at least 1 side.
-    int visited[MAX_FIELD][MAX_FIELD] = {0};
-    FloodFillWithBoxes(level, level->player.x, level->player.y, visited);
-
-    for (int i = 0; i < level->num_boxes; i++)
-    {
-        int bx = level->boxes[i].x;
-        int by = level->boxes[i].y;
-
-        int reachable = 0;
-        for (int d = 0; d < 4; d++)
-        {
-            int px = bx + DX[d];
-            int py = by + DY[d];
-            if (px >= 0 && px < level->width &&
-                py >= 0 && py < level->height &&
-                visited[py][px])
-            {
-                reachable = 1;
-                break;
-            }
-        }
-        if (!reachable) return 0;
-    }
-    return 1;
-}
-
 Level GenerateLevel(Difficulty difficulty)
-{ // generate level depends on difficulty.
+{ // main function
     srand(time(NULL));
     Level level = {0};
     level.difficulty = difficulty;
@@ -313,78 +244,57 @@ Level GenerateLevel(Difficulty difficulty)
     int valid = 0;
     while (!valid)
     {
-        switch (difficulty)
-        {
+        switch (difficulty) {
             case DIFF_EASY:
-                level.width = 8 + rand() % 3; // 8-10
-                level.height = 8 + rand() % 3;
-                level.num_boxes = 3 + rand() % 2; // 3-4
+                level.width = 9 + rand() % 4;
+                level.height = 9 + rand() % 4;
+                level.num_boxes = 3 + rand() % 2;
                 break;
             case DIFF_MEDIUM:
-                level.width = 12 + rand() %3; // 12-14
-                level.height = 12 + rand() % 3;
-                level.num_boxes = 5 + rand() % 2; // 5-6
+                level.width = 13 + rand() % 4;
+                level.height = 13 + rand() % 4;
+                level.num_boxes = 5 + rand() % 2;
                 break;
             case DIFF_HARD:
-                level.width = 15 + rand() % 4; // 15-18
-                level.height = 15 + rand() % 4;
-                level.num_boxes = 7 + rand() % 2; // 7-8
+                level.width = 17 + rand() % 4;
+                level.height = 17 + rand() % 4;
+                level.num_boxes = 7 + rand() % 3;
                 break;
         }
-
+        
         for (size_t i = 0; i < level.height; i++)
-        {
             for (size_t j = 0; j < level.width; j++) 
-            {
                 level.cells[i][j] = CELL_WALL;
-            }
-        }
 
-        RandomWalk(&level);
-
-        if (!IsConnected(&level)) continue;
+        GenerateMaze(&level);
 
         if (!PlaceGoalsAndBoxes(&level)) continue;
-
-        int target_moves;
-        switch (difficulty)
-        {
-            case DIFF_EASY:   target_moves = 20 + rand() % 16; break; // 20-35
-            case DIFF_MEDIUM: target_moves = 40 + rand() % 31; break; // 40-70
-            case DIFF_HARD:   target_moves = 80 + rand() % 41; break; // 80-120
-        }
 
         int player_placed = 0;
         for (int a = 0; a < 500 && !player_placed; a++) {
             int px = 1 + rand() % (level.width - 2);
             int py = 1 + rand() % (level.height - 2);
-            if (level.cells[py][px] != CELL_FLOOR) continue;
-
-            int on_box = 0;
-            for (int i = 0; i < level.num_boxes; i++)
-                if (level.boxes[i].x == px && level.boxes[i].y == py) { on_box = 1; break; }
-            if (on_box) continue;
-
-            level.player.x = px;
-            level.player.y = py;
-            player_placed = 1;
+            if (level.cells[py][px] == CELL_FLOOR && !HasBox(&level, px, py))
+            {
+                level.player.x = px; level.player.y = py;
+                player_placed = 1;
+            }
         }
         if (!player_placed) continue;
 
+        int target_moves = (difficulty == DIFF_EASY) ? 30 : (difficulty == DIFF_MEDIUM ? 60 : 100);
         ReverseSolve(&level, target_moves);
 
-        int min_dist = 2;
-        int too_close = 0;
-        for (int i = 0; i < level.num_boxes; i++) {
-            if (Distance(level.boxes[i], level.goals[i]) < min_dist) {
-                too_close = 1;
-                break;
-            }
+        // отбраковываем уровни, где генератор сдался и оставил ящики на целях
+        int boxes_on_goals = 0;
+        for (int i = 0; i < level.num_boxes; i++)
+        {
+            if (IsOnGoal(&level, level.boxes[i])) boxes_on_goals++;
         }
-        if (too_close) continue;
+        if (boxes_on_goals > 0) continue; // Все ящики должны быть сдвинуты с целей
 
+        // отбраковываем уровни, которые закончились очевидным дедлоком
         if (HasDeadlock(&level)) continue;
-        if (!AllBoxesReachable(&level)) continue;
 
         level.initial_state.player = level.player;
         memcpy(level.initial_state.boxes, level.boxes, sizeof(level.boxes));
@@ -396,11 +306,11 @@ Level GenerateLevel(Difficulty difficulty)
     return level;
 }
 
-void RestartLevel(Level *const level)
+void RestartLevel(Level *level)
 { // set session parameters to zero.
     level->player = level->initial_state.player;
-    memcpy(level->boxes, level->initial_state.boxes, sizeof(level->boxes));
     level->step_count = 0;
     level->time_elapsed = 0;
     level->undo_top = 0;
+    memcpy(level->boxes, level->initial_state.boxes, sizeof(level->boxes));
 }

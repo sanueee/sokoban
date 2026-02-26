@@ -10,18 +10,16 @@ int main(void)
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetTargetFPS(30);
 
-    Level level = GenerateLevel(DIFF_EASY);
+    Level level = GenerateLevel(DIFF_HARD);
 
     while (!WindowShouldClose())
     {
         HandleInput(&level);
 
-        /*
         if (CheckWin(&level)) {
             // пока просто закрываем окно
             break;
         }
-        */
 
         BeginDrawing();
         ClearBackground(BLACK);
