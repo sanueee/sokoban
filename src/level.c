@@ -9,7 +9,7 @@ static const int DY[4] = {-1, 1, 0, 0};
 
 
 static void RandomWalk(Level *const level)
-{ // сheck the corridors
+{ // сhecks the corridors.
     int total_square = (level->height - 2) * (level->width - 2);
     int target = total_square * 0.6;
     int free_count = 0;
@@ -40,7 +40,7 @@ static void RandomWalk(Level *const level)
 }
 
 static void FloodFill(Level *const level, int x, int y, int visited[MAX_FIELD][MAX_FIELD])
-{ // mark the field like flood (ret 1 if all cells are available)
+{ // marks the field like flood (ret 1 if all cells are available).
     if (x < 0 || x >= level->width || y < 0 || y >= level->height) return;
     if (visited[y][x] || level->cells[y][x] == CELL_WALL) return;
 
@@ -52,7 +52,7 @@ static void FloodFill(Level *const level, int x, int y, int visited[MAX_FIELD][M
 }
 
 static int IsConnected(Level *const level)
-{ // check for passability 
+{ // checks for passability.
     int visited[MAX_FIELD][MAX_FIELD] = {0};
 
     int startX = -1; int startY = -1;
@@ -86,12 +86,12 @@ static int IsConnected(Level *const level)
 }
 
 static int Distance(Position a, Position b)
-{ // calculate the distance
+{ // calculates the distance.
     return abs(a.x - b.x) + abs(a.y - b.y);
 }
 
 static int PlaceGoalsAndBoxes(Level *const level)
-{ // just place goal num of boxes (ret count of placed)
+{ // just place goal num of boxes (ret count of placed).
     int placed = 0;
     int attempts = 0;
 
@@ -125,7 +125,7 @@ static int PlaceGoalsAndBoxes(Level *const level)
 }
 
 static void ReverseSolve(Level *const level, int target_moves)
-{ // place boxes on start positions
+{ // places boxes on start positions.
     int last_box = -1;
     int same_box_count = 0;
 
@@ -185,8 +185,68 @@ static void ReverseSolve(Level *const level, int target_moves)
     }
 }
 
+static int IsCornerDeadlock(Level *const level, Position box)
+{ // сhecks whether a box is trapped in a corner by two walls along adjacent axes. such a box cannot be moved if it is not on target.
+    int wall_up    = (level->cells[box.y - 1][box.x] == CELL_WALL);
+    int wall_down  = (level->cells[box.y + 1][box.x] == CELL_WALL);
+    int wall_left  = (level->cells[box.y][box.x - 1] == CELL_WALL);
+    int wall_right = (level->cells[box.y][box.x + 1] == CELL_WALL);
+
+    return (wall_up && wall_left)  ||
+           (wall_up && wall_right) ||
+           (wall_down && wall_left)||
+           (wall_down && wall_right);
+}
+
+static int IsOnGoal(Level *level, Position box)
+{ // returns 1 if the box is located at one of the target positions.
+    for (int i = 0; i < level->num_boxes; i++)
+        if (level->goals[i].x == box.x && level->goals[i].y == box.y)
+            return 1;
+    return 0;
+}
+
+static int HasDeadlock(Level *level)
+{ // checks all the boxes on the corner deadlock. the boxes on the targets are skipped — they are already in place.
+  // returns 1 if at least one box is deadlocked.
+    for (int i = 0; i < level->num_boxes; i++)
+    {
+        if (IsOnGoal(level, level->boxes[i])) continue;
+        if (IsCornerDeadlock(level, level->boxes[i])) return 1;
+    }
+    return 0;
+}
+
+static int AllBoxesReachable(Level *level)
+{ // checking possibility to reach box from at least 1 side.
+    int visited[MAX_FIELD][MAX_FIELD] = {0};
+    FloodFill(level, level->player.x, level->player.y, visited);
+
+    for (int i = 0; i < level->num_boxes; i++)
+    {
+        int bx = level->boxes[i].x;
+        int by = level->boxes[i].y;
+
+        int reachable = 0;
+        for (int d = 0; d < 4; d++)
+        {
+            int px = bx + DX[d];
+            int py = by + DY[d];
+            if (px >= 0 && px < level->width &&
+                py >= 0 && py < level->height &&
+                visited[py][px])
+            {
+                reachable = 1;
+                break;
+            }
+        }
+        if (!reachable) return 0;
+    }
+    return 1;
+}
+
 Level GenerateLevel(Difficulty difficulty)
-{ // generate level depends on difficulty
+{ // generate level depends on difficulty.
     srand(time(NULL));
     Level level = {0};
     level.difficulty = difficulty;
@@ -236,6 +296,14 @@ Level GenerateLevel(Difficulty difficulty)
         }
 
         ReverseSolve(&level, target_moves);
+
+        if (HasDeadlock(&level)) continue;
+        if (!AllBoxesReachable(&level)) continue;
+
+        level.initial_state.player = level.player;
+        memcpy(level.initial_state.boxes, level.boxes, sizeof(level.boxes));
+        level.initial_state.step_count = 0;
+        
         valid = 1;
     }
 
@@ -243,8 +311,10 @@ Level GenerateLevel(Difficulty difficulty)
 }
 
 void RestartLevel(Level *const level)
-{ // set session parameters to zero
-    level->undo_top = 0;
-    level->time_elapsed = 0;
+{ // set session parameters to zero.
+    level->player = level->initial_state.player;
+    memcpy(level->boxes, level->initial_state.boxes, sizeof(level->boxes));
     level->step_count = 0;
+    level->time_elapsed = 0;
+    level->undo_top = 0;
 }

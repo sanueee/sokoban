@@ -55,6 +55,7 @@ typedef struct
     float time_elapsed;
     GameState undo_stack[MAX_UNDO];
     int undo_top;
+    GameState initial_state;
 } Level;
 
 #endif
