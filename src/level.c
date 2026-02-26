@@ -50,30 +50,59 @@ static void RandomWalk(Level *const level)
     }
 }
 
-static void FloodFill(Level *const level, int x, int y, int visited[MAX_FIELD][MAX_FIELD])
+static void FloodFill(Level *const level, int startX, int startY, int visited[MAX_FIELD][MAX_FIELD])
 { // marks the field like flood (ret 1 if all cells are available).
-    if (x < 0 || x >= level->width || y < 0 || y >= level->height) return;
-    if (visited[y][x] || level->cells[y][x] == CELL_WALL) return;
+    typedef struct { int x, y; } Point;
+    Point stack[MAX_FIELD * MAX_FIELD];
+    int top = 0;
 
-    visited[y][x] = 1;
-    FloodFill(level, x + 1, y, visited);
-    FloodFill(level, x - 1, y, visited);
-    FloodFill(level, x, y + 1, visited);
-    FloodFill(level, x, y - 1, visited);
+    stack[top++] = (Point){startX, startY};
+    visited[startY][startX] = 1;
+
+    while (top > 0)
+    {
+        Point p = stack[--top];
+        for (int d = 0; d < 4; d++)
+        {
+            int nx = p.x + DX[d];
+            int ny = p.y + DY[d];
+            if (nx < 0 || nx >= level->width || ny < 0 || ny >= level->height) continue;
+            if (visited[ny][nx] || level->cells[ny][nx] == CELL_WALL) continue;
+            visited[ny][nx] = 1;
+            stack[top++] = (Point){nx, ny};
+        }
+    }
 }
 
-static void FloodFillWithBoxes(Level *level, int x, int y, int visited[MAX_FIELD][MAX_FIELD]) {
-    if (x < 0 || x >= level->width || y < 0 || y >= level->height) return;
-    if (visited[y][x] || level->cells[y][x] == CELL_WALL) return;
+static void FloodFillWithBoxes(Level *level, int startX, int startY, int visited[MAX_FIELD][MAX_FIELD])
+{
+    typedef struct { int x, y; } Point;
+    Point stack[MAX_FIELD * MAX_FIELD];
+    int top = 0;
 
-    for (int i = 0; i < level->num_boxes; i++)
-        if (level->boxes[i].x == x && level->boxes[i].y == y) return;
+    stack[top++] = (Point){startX, startY};
+    visited[startY][startX] = 1;
 
-    visited[y][x] = 1;
-    FloodFillWithBoxes(level, x + 1, y, visited);
-    FloodFillWithBoxes(level, x - 1, y, visited);
-    FloodFillWithBoxes(level, x, y + 1, visited);
-    FloodFillWithBoxes(level, x, y - 1, visited);
+    while (top > 0)
+    {
+        Point p = stack[--top];
+        for (int d = 0; d < 4; d++)
+        {
+            int nx = p.x + DX[d];
+            int ny = p.y + DY[d];
+            if (nx < 0 || nx >= level->width || ny < 0 || ny >= level->height) continue;
+            if (visited[ny][nx] || level->cells[ny][nx] == CELL_WALL) continue;
+
+            // проверка на ящик
+            int is_box = 0;
+            for (int i = 0; i < level->num_boxes; i++)
+                if (level->boxes[i].x == nx && level->boxes[i].y == ny) { is_box = 1; break; }
+            if (is_box) continue;
+
+            visited[ny][nx] = 1;
+            stack[top++] = (Point){nx, ny};
+        }
+    }
 }
 
 static int IsConnected(Level *const level)
@@ -121,19 +150,16 @@ static void ReverseSolve(Level *level, int target_moves) {
     int same_box_count = 0;
 
     for (int i = 0; i < target_moves; i++) {
-        int attempts = 0;
+        // Считаем flood fill один раз на ход, а не на каждую попытку
+        int visited[MAX_FIELD][MAX_FIELD] = {0};
+        FloodFillWithBoxes(level, level->player.x, level->player.y, visited);
 
-        while (attempts < 100) {
-            attempts++;
-
+        int moved = 0;
+        for (int attempts = 0; attempts < 100 && !moved; attempts++) {
             int box_idx = rand() % level->num_boxes;
 
-            if (box_idx == last_box) {
-                same_box_count++;
-                if (same_box_count > 5) continue;
-            } else {
-                same_box_count = 0;
-            }
+            if (box_idx == last_box && ++same_box_count > 5) continue;
+            else if (box_idx != last_box) same_box_count = 0;
 
             int dir = rand() % 4;
             int bx = level->boxes[box_idx].x;
@@ -141,38 +167,34 @@ static void ReverseSolve(Level *level, int target_moves) {
 
             int new_bx = bx - DX[dir];
             int new_by = by - DY[dir];
-
-            // Позиция игрока для толчка
             int px = bx + DX[dir];
             int py = by + DY[dir];
 
             if (new_bx <= 0 || new_bx >= level->width - 1) continue;
             if (new_by <= 0 || new_by >= level->height - 1) continue;
             if (level->cells[new_by][new_bx] != CELL_FLOOR) continue;
+            if (px <= 0 || px >= level->width - 1) continue;
+            if (py <= 0 || py >= level->height - 1) continue;
             if (level->cells[py][px] != CELL_FLOOR) continue;
 
-            // Новая позиция ящика не занята другим ящиком
             int occupied = 0;
             for (int j = 0; j < level->num_boxes; j++) {
                 if (j == box_idx) continue;
                 if (level->boxes[j].x == new_bx && level->boxes[j].y == new_by) {
-                    occupied = 1;
-                    break;
+                    occupied = 1; break;
                 }
             }
             if (occupied) continue;
 
-            // Проверить что игрок может добраться до px, py
-            int visited[MAX_FIELD][MAX_FIELD] = {0};
-            FloodFillWithBoxes(level, level->player.x, level->player.y, visited);
-            if (!visited[py][px]) continue;  // ← ключевая проверка
+            // используем уже посчитанный visited
+            if (!visited[py][px]) continue;
 
             level->boxes[box_idx].x = new_bx;
             level->boxes[box_idx].y = new_by;
             level->player.x = bx;
             level->player.y = by;
             last_box = box_idx;
-            break;
+            moved = 1;
         }
     }
 }
@@ -351,7 +373,7 @@ Level GenerateLevel(Difficulty difficulty)
 
         ReverseSolve(&level, target_moves);
 
-        int min_dist = (difficulty == DIFF_EASY) ? 3 : (difficulty == DIFF_MEDIUM) ? 5 : 7;
+        int min_dist = 2;
         int too_close = 0;
         for (int i = 0; i < level.num_boxes; i++) {
             if (Distance(level.boxes[i], level.goals[i]) < min_dist) {
