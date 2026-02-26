@@ -1,5 +1,8 @@
 #include "raylib.h"
 #include "types.h"
+#include "level.h"
+#include "render.h"
+#include "game.h"
 
 int main(void)
 {
@@ -7,13 +10,20 @@ int main(void)
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetTargetFPS(30);
 
-    Screen current_screen = SCREEN_MENU;
+    Level level = GenerateLevel(DIFF_EASY);
 
     while (!WindowShouldClose())
     {
+        HandleInput(&level);
+
+        if (CheckWin(&level)) {
+            // пока просто закрываем окно
+            break;
+        }
+
         BeginDrawing();
         ClearBackground(BLACK);
-        DrawText("Sokoban", 350, 280, 20, WHITE);
+        RenderLevel(&level);
         EndDrawing();
     }
 

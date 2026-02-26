@@ -51,6 +51,20 @@ static void FloodFill(Level *const level, int x, int y, int visited[MAX_FIELD][M
     FloodFill(level, x, y - 1, visited);
 }
 
+static void FloodFillWithBoxes(Level *level, int x, int y, int visited[MAX_FIELD][MAX_FIELD]) {
+    if (x < 0 || x >= level->width || y < 0 || y >= level->height) return;
+    if (visited[y][x] || level->cells[y][x] == CELL_WALL) return;
+
+    for (int i = 0; i < level->num_boxes; i++)
+        if (level->boxes[i].x == x && level->boxes[i].y == y) return;
+
+    visited[y][x] = 1;
+    FloodFillWithBoxes(level, x + 1, y, visited);
+    FloodFillWithBoxes(level, x - 1, y, visited);
+    FloodFillWithBoxes(level, x, y + 1, visited);
+    FloodFillWithBoxes(level, x, y - 1, visited);
+}
+
 static int IsConnected(Level *const level)
 { // checks for passability.
     int visited[MAX_FIELD][MAX_FIELD] = {0};
@@ -124,30 +138,24 @@ static int PlaceGoalsAndBoxes(Level *const level)
     return placed == level->num_boxes;
 }
 
-static void ReverseSolve(Level *const level, int target_moves)
-{ // places boxes on start positions.
+// places boxes on start positions.
+static void ReverseSolve(Level *level, int target_moves) {
     int last_box = -1;
     int same_box_count = 0;
 
-    for (int i = 0; i < target_moves; i++)
-    {
+    for (int i = 0; i < target_moves; i++) {
         int attempts = 0;
-        while (attempts < 20)
-        {
+
+        while (attempts < 100) {
             attempts++;
-            
+
             int box_idx = rand() % level->num_boxes;
-            if (box_idx == last_box) // чтобы не двигать один бокс вечно
-            {
+
+            if (box_idx == last_box) {
                 same_box_count++;
-                if (same_box_count > 5)
-                {
-                    continue;
-                }
-                else
-                {
-                    same_box_count = 0;
-                }
+                if (same_box_count > 5) continue;
+            } else {
+                same_box_count = 0;
             }
 
             int dir = rand() % 4;
@@ -157,6 +165,7 @@ static void ReverseSolve(Level *const level, int target_moves)
             int new_bx = bx - DX[dir];
             int new_by = by - DY[dir];
 
+            // Позиция игрока для толчка
             int px = bx + DX[dir];
             int py = by + DY[dir];
 
@@ -165,6 +174,7 @@ static void ReverseSolve(Level *const level, int target_moves)
             if (level->cells[new_by][new_bx] != CELL_FLOOR) continue;
             if (level->cells[py][px] != CELL_FLOOR) continue;
 
+            // Новая позиция ящика не занята другим ящиком
             int occupied = 0;
             for (int j = 0; j < level->num_boxes; j++) {
                 if (j == box_idx) continue;
@@ -174,6 +184,11 @@ static void ReverseSolve(Level *const level, int target_moves)
                 }
             }
             if (occupied) continue;
+
+            // Проверить что игрок может добраться до px, py
+            int visited[MAX_FIELD][MAX_FIELD] = {0};
+            FloodFillWithBoxes(level, level->player.x, level->player.y, visited);
+            if (!visited[py][px]) continue;  // ← ключевая проверка
 
             level->boxes[box_idx].x = new_bx;
             level->boxes[box_idx].y = new_by;
@@ -220,7 +235,7 @@ static int HasDeadlock(Level *level)
 static int AllBoxesReachable(Level *level)
 { // checking possibility to reach box from at least 1 side.
     int visited[MAX_FIELD][MAX_FIELD] = {0};
-    FloodFill(level, level->player.x, level->player.y, visited);
+    FloodFillWithBoxes(level, level->player.x, level->player.y, visited);
 
     for (int i = 0; i < level->num_boxes; i++)
     {
@@ -290,7 +305,7 @@ Level GenerateLevel(Difficulty difficulty)
         int target_moves;
         switch (difficulty)
         {
-            case DIFF_EASY:   target_moves = 15 + rand() % 16; break; // 15-30
+            case DIFF_EASY:   target_moves = 20 + rand() % 16; break; // 20-35
             case DIFF_MEDIUM: target_moves = 40 + rand() % 31; break; // 40-70
             case DIFF_HARD:   target_moves = 80 + rand() % 41; break; // 80-120
         }
