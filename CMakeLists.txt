@@ -10,6 +10,15 @@ if(APPLE)
     link_directories(/opt/homebrew/lib)
 endif()
 
+# Windows (vcpkg)
+if(WIN32)
+    if(DEFINED ENV{VCPKG_ROOT})
+        set(CMAKE_TOOLCHAIN_FILE "$ENV{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+            CACHE STRING "Vcpkg toolchain file")
+    endif()
+    set(VCPKG_TARGET_TRIPLET "x64-windows" CACHE STRING "Vcpkg triplet")
+endif()
+
 find_package(raylib REQUIRED)
 find_package(SQLite3 REQUIRED)
 
@@ -23,3 +32,13 @@ add_executable(sokoban
 )
 
 target_link_libraries(sokoban raylib SQLite::SQLite3)
+
+# Windows: copy required DLLs next to the executable after build
+if(WIN32)
+    add_custom_command(TARGET sokoban POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            $<TARGET_RUNTIME_DLLS:sokoban>
+            $<TARGET_FILE_DIR:sokoban>
+        COMMAND_EXPAND_LISTS
+    )
+endif()
