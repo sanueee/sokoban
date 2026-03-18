@@ -3,10 +3,11 @@
 #include "level.h"
 #include "render.h"
 #include "game.h"
+#include "sqlite3.h"
 
 int main(void)
 {
-    InitWindow(800, 600, "sokoban");
+    InitWindow(1600, 1200, "sokoban");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetTargetFPS(30);
 

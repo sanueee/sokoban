@@ -4,6 +4,7 @@
 #define MAX_BOXES 10
 #define MAX_UNDO 512
 #define MAX_FIELD 20
+#include <stdbool.h>
 
 typedef enum
 {
@@ -43,6 +44,14 @@ typedef struct
 
 typedef struct
 {
+    int x, y;
+    int dir;         // 0-Down, 1-Up, 2-Left, 3-Right
+    bool is_moving;
+    bool is_pushing;
+} Player;
+
+typedef struct
+{
     int session_id;
     int width, height;
     CellType cells[MAX_FIELD][MAX_FIELD];
@@ -50,6 +59,7 @@ typedef struct
     int num_boxes;
     Position boxes[MAX_BOXES]; // откуда двигать
     Position player;
+    Player character;
     Difficulty difficulty;
     int step_count;
     float time_elapsed;
