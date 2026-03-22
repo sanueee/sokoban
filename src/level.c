@@ -67,13 +67,13 @@ static void GenerateMaze(Level *const level)
     // создаем "комнаты" и циклы
     // ломаем немного случайных стен, чтобы появились открытые пространства и обходные пути
     // количество сломанных стен зависит от размера карты (около 10% площади)
-    int extra_spaces = (level->width * level->height) / 10; 
-    
+    int extra_spaces = (level->width * level->height) / 10;
+
     for (int i = 0; i < extra_spaces; i++)
     {
         int rx = 1 + rand() % (level->width - 2);
         int ry = 1 + rand() % (level->height - 2);
-        
+
         if (level->cells[ry][rx] == CELL_WALL)
         {
             level->cells[ry][rx] = CELL_FLOOR;
@@ -152,7 +152,7 @@ static int PlaceGoalsAndBoxes(Level *const level)
         int y = 2 + rand() % (level->height - 4);
 
         if (level->cells[y][x] != CELL_FLOOR) continue;
-        
+
         if (IsCornerDeadlock(level, x, y)) continue;
 
         int too_close = 0;
@@ -184,11 +184,11 @@ static void ReverseSolve(Level *level, int target_moves)
         {
             int box_idx = rand() % level->num_boxes;
             int dir = rand() % 4;
-            
+
             int bx = level->boxes[box_idx].x;
             int by = level->boxes[box_idx].y;
 
-            // направление, куда мы тянем ящик. 
+            // направление, куда мы тянем ящик.
             // значит, игрок должен стоять со стороны box - dir (pull_x, pull_y)
             // и отступать на шаг назад в box - 2*dir (back_x, back_y)
             int dx = DX[dir], dy = DY[dir];
@@ -256,9 +256,9 @@ Level GenerateLevel(Difficulty difficulty)
                 level.num_boxes = 7 + rand() % 3;
                 break;
         }
-        
+
         for (size_t i = 0; i < level.height; i++)
-            for (size_t j = 0; j < level.width; j++) 
+            for (size_t j = 0; j < level.width; j++)
                 level.cells[i][j] = CELL_WALL;
 
         GenerateMaze(&level);
@@ -294,7 +294,7 @@ Level GenerateLevel(Difficulty difficulty)
         level.initial_state.player = level.player;
         memcpy(level.initial_state.boxes, level.boxes, sizeof(level.boxes));
         level.initial_state.step_count = 0;
-        
+
         valid = 1;
     }
 
