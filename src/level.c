@@ -26,7 +26,7 @@ static void ShuffleDirs(int *dirs)
 }
 
 static void CarveMaze(Level *level, int x, int y)
-{ // Recursive Backtracker for corridors 1x1
+{ // recursive Backtracker for corridors 1x1
     level->cells[y][x] = CELL_FLOOR;
 
     int dirs[] = {0, 1, 2, 3};
@@ -57,30 +57,25 @@ static void CarveMaze(Level *level, int x, int y)
 
 static void GenerateMaze(Level *const level)
 { // generating map
-    for (int y = 0; y < level->height; y++)
-    {
-        for (int x = 0; x < level->width; x++)
-        {
-            level->cells[y][x] = CELL_WALL;
-        }
-    }
 
-    // вырезаем лабиринт. обязательно начинаем с нечетных координат!
-    // иначе коридоры могут "прилипнуть" к краю карты.
+    // вырезаем лабиринт. обязательно начинаем с нечетных координат
+    // иначе коридоры могут "прилипнуть" к краю карты
     int startX = 1 + (rand() % ((level->width - 2) / 2)) * 2;
     int startY = 1 + (rand() % ((level->height - 2) / 2)) * 2;
     CarveMaze(level, startX, startY);
 
-    // создаем "комнаты" и циклы.
-    // ломаем немного случайных стен, чтобы появились открытые пространства и обходные пути.
-    // количество сломанных стен зависит от размера карты (около 10% площади).
+    // создаем "комнаты" и циклы
+    // ломаем немного случайных стен, чтобы появились открытые пространства и обходные пути
+    // количество сломанных стен зависит от размера карты (около 10% площади)
     int extra_spaces = (level->width * level->height) / 10; 
     
-    for (int i = 0; i < extra_spaces; i++) {
+    for (int i = 0; i < extra_spaces; i++)
+    {
         int rx = 1 + rand() % (level->width - 2);
         int ry = 1 + rand() % (level->height - 2);
         
-        if (level->cells[ry][rx] == CELL_WALL) {
+        if (level->cells[ry][rx] == CELL_WALL)
+        {
             level->cells[ry][rx] = CELL_FLOOR;
         }
     }
