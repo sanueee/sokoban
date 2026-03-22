@@ -1,54 +1,54 @@
 #include "render.h"
 
-#define C_BG            CLITERAL(Color){ 15,  14,  22, 255}
+#define C_BG CLITERAL(Color){35, 45, 35, 255}
 
-#define C_WALL          CLITERAL(Color){ 42,  39,  58, 255}
-#define C_WALL_HI       CLITERAL(Color){ 72,  67,  95, 255}  // светлая грань
-#define C_WALL_SH       CLITERAL(Color){ 20,  18,  30, 255}  // тёмная грань
-#define C_WALL_LINE     CLITERAL(Color){ 28,  26,  40, 255}  // горизонтальный шов
+#define C_WALL CLITERAL(Color){72, 90, 65, 255}
+#define C_WALL_HI CLITERAL(Color){110, 130, 100, 255}
+#define C_WALL_SH CLITERAL(Color){40, 55, 38, 255}
+#define C_WALL_LINE CLITERAL(Color){55, 72, 50, 255}
 
-#define C_FLOOR         CLITERAL(Color){ 30,  28,  42, 255}
-#define C_FLOOR_DOT     CLITERAL(Color){ 44,  41,  60, 255}  // угловые точки
+#define C_FLOOR CLITERAL(Color){52, 68, 48, 255}
+#define C_FLOOR_DOT CLITERAL(Color){75, 95, 68, 255}
 
-#define C_GOAL          CLITERAL(Color){117,  66,  245, 255}
-#define C_GOAL_DIM      CLITERAL(Color){ 90,  68,  14, 255}  // ореол
+#define C_GOAL CLITERAL(Color){160, 210, 140, 255}
+#define C_GOAL_DIM CLITERAL(Color){90, 130, 75, 255}
 
 // box
-#define C_BOX           CLITERAL(Color){175, 108,  38, 255}
-#define C_BOX_HI        CLITERAL(Color){215, 148,  68, 255}
-#define C_BOX_SH        CLITERAL(Color){ 88,  52,  12, 255}
-#define C_BOX_CROSS     CLITERAL(Color){130,  78,  20, 255}
+#define C_BOX CLITERAL(Color){220, 200, 165, 255}
+#define C_BOX_HI CLITERAL(Color){245, 230, 200, 255}
+#define C_BOX_SH CLITERAL(Color){150, 130, 100, 255}
+#define C_BOX_CROSS CLITERAL(Color){180, 160, 125, 255}
 
 // box on goal
-#define C_BOX_ON        CLITERAL(Color){ 55, 185,  90, 255}
-#define C_BOX_ON_HI     CLITERAL(Color){ 95, 225, 135, 255}
-#define C_BOX_ON_SH     CLITERAL(Color){ 18, 100,  45, 255}
-#define C_BOX_ON_CROSS  CLITERAL(Color){ 22, 130,  58, 255}
+#define C_BOX_ON CLITERAL(Color){140, 195, 120, 255}
+#define C_BOX_ON_HI CLITERAL(Color){180, 230, 160, 255}
+#define C_BOX_ON_SH CLITERAL(Color){75, 130, 60, 255}
+#define C_BOX_ON_CROSS CLITERAL(Color){95, 160, 80, 255}
 
-#define C_HAT     (Color){240, 200, 80, 255}  // Желтая шляпа
-#define C_HAT_SH  (Color){180, 150, 40, 255}  // Тень шляпы
-#define C_GI      (Color){240, 240, 240, 255} // Белый верх
-#define C_HAKAMA  (Color){60, 80, 110, 255}   // Синие штаны
-#define C_EYE     (Color){255, 255, 0, 255}   // Желтые глаза
-#define C_BLACK   (Color){20, 20, 20, 255}    // Тень под шляпой
-#define C_STEEL   (Color){180, 190, 200, 255} // Катана
+#define C_HAT (Color){240, 225, 180, 255}
+#define C_HAT_SH (Color){190, 170, 125, 255}
+#define C_GI (Color){230, 240, 220, 255}
+#define C_HAKAMA (Color){80, 120, 90, 255}
+#define C_EYE (Color){200, 240, 180, 255}
+#define C_BLACK (Color){30, 42, 28, 255}
+#define C_STEEL (Color){190, 210, 195, 255}
 
-#define C_HUD_BG        CLITERAL(Color){ 18,  16,  28, 255}
-#define C_HUD_LINE      CLITERAL(Color){ 58,  52,  80, 255}
-#define C_HUD_TEXT      CLITERAL(Color){195, 190, 215, 255}
-#define C_HUD_DIM       CLITERAL(Color){110, 105, 135, 255}
+#define C_HUD_BG CLITERAL(Color){25, 35, 25, 255}
+#define C_HUD_LINE CLITERAL(Color){70, 95, 62, 255}
+#define C_HUD_TEXT CLITERAL(Color){210, 230, 195, 255}
+#define C_HUD_DIM CLITERAL(Color){120, 155, 108, 255}
 
 static void DrawDiamond(int cx, int cy, int r, Color col)
 { // draws the goal
     for (int i = 0; i <= r; i++)
     {
         int w = i * 2 + 1;
-        DrawRectangle(cx - i, cy - r + i, w, 1, col);   // верхняя половина + центр
+        DrawRectangle(cx - i, cy - r + i, w, 1, col); // верхняя половина + центр
     }
     for (int i = 0; i < r; i++)
     {
         int w = i * 2 + 1;
-        DrawRectangle(cx - i, cy + r - i, w, 1, col);   // нижняя половина
+        DrawRectangle(cx - i, cy + r - i, w, 1, col); // нижняя половина
     }
 }
 
@@ -62,7 +62,7 @@ static void DrawWallTile(int x, int y, int t)
 
     // тёмные низ, право
     DrawRectangle(x, y + t - 2, t, 2, C_WALL_SH);
-    DrawRectangle(x + t - 2, y,2, t, C_WALL_SH);
+    DrawRectangle(x + t - 2, y, 2, t, C_WALL_SH);
 
     if (t >= 14)
         DrawRectangle(x + 3, y + t / 2, t - 6, 1, C_WALL_LINE);
@@ -86,8 +86,9 @@ static void DrawGoalTile(int x, int y, int t)
 
     int cx = x + t / 2;
     int cy = y + t / 2;
-    int r  = t / 5;
-    if (r < 2) r = 2;
+    int r = t / 5;
+    if (r < 2)
+        r = 2;
 
     DrawDiamond(cx, cy, r + 2, C_GOAL_DIM);
     DrawDiamond(cx, cy, r, C_GOAL);
@@ -110,7 +111,7 @@ static void DrawBoxTile(int x, int y, int t, int on_goal)
     DrawRectangle(bx, by, 2, bh, hi);
 
     DrawRectangle(bx, by + bh - 2, bw, 2, sh);
-    DrawRectangle(bx + bw - 2, by, 2,  bh, sh);
+    DrawRectangle(bx + bw - 2, by, 2, bh, sh);
 
     int cx = x + t / 2;
     int cy = y + t / 2;
@@ -128,57 +129,68 @@ static void DrawPlayerTile(int x, int y, int t, float walk_phase, int dir, bool 
     // Параметры анимации
     int frame = (int)(walk_phase * 10) % 4; // 4 кадра анимации
     int bob = (frame % 2 == 0) ? 0 : 1;     // Легкое покачивание при ходьбе
-    
+
     // Если игрок стоит (walk_phase == 0), делаем эффект дыхания
-    if (walk_phase == 0) bob = (int)(GetTime() * 2) % 2;
+    if (walk_phase == 0)
+        bob = (int)(GetTime() * 2) % 2;
 
     // Центрирование и базовые размеры
-    int ox = x + t/10; 
+    int ox = x + t / 10;
     int oy = y + bob;
-    int sw = t - (t/5); // ширина персонажа
+    int sw = t - (t / 5); // ширина персонажа
 
     // 1. Отрисовка НОГ (Хакама)
     // При движении вверх/вниз ноги меняются местами. При толкании — упор.
-    if (is_pushing) {
-        DrawRectangle(ox + 2, oy + t*2/3, sw-4, t/3, C_HAKAMA); // Широкая стойка
-    } else {
-        int leg_off = (frame % 2 == 0) ? 2 : -2;
-        DrawRectangle(ox + 4 + leg_off, oy + t*2/3, sw/3, t/3, C_HAKAMA); // Левая нога
-        DrawRectangle(ox + sw - 8 - leg_off, oy + t*2/3, sw/3, t/3, C_HAKAMA); // Правая нога
+    if (is_pushing)
+    {
+        DrawRectangle(ox + 2, oy + t * 2 / 3, sw - 4, t / 3, C_HAKAMA); // Широкая стойка
+    }
+    else
+    {
+        int leg_off = (frame % 2 == 0) ? 4 : -4;
+        DrawRectangle(ox + leg_off, oy + t * 2 / 3, sw / 3, t / 3, C_HAKAMA);           // Левая нога
+        DrawRectangle(ox + leg_off * leg_off, oy + t * 2 / 3, sw / 3, t / 3, C_HAKAMA); // Правая нога
     }
 
     // 2. Отрисовка ТУЛОВИЩА (Белое кимоно)
-    int body_h = t/2;
+    int body_h = t / 2;
     int push_offset = (is_pushing && (dir == 2 || dir == 3)) ? (dir == 3 ? 4 : -4) : 0;
-    DrawRectangle(ox + 4 + push_offset, oy + t/3, sw - 8, body_h, C_GI);
+    DrawRectangle(ox + 4 + push_offset, oy + t / 3, sw - 8, body_h, C_GI);
 
     // 3. КАТАНА
     // При движении ВВЕРХ (dir == 1) рисуем за спиной по диагонали
-    if (dir == 1) {
-        DrawRectangle(ox + 2, oy + t/3, sw - 4, 3, C_STEEL); // Горизонтально за спиной
-    } else if (dir == 3) { // Направо - видна сбоку
-        DrawRectangle(ox + sw - 2, oy + t/2, 6, 2, C_STEEL);
-    } else if (dir == 2) { // Налево
-        DrawRectangle(ox - 4, oy + t/2, 6, 2, C_STEEL);
+    if (dir == 1)
+    {
+        DrawRectangle(ox + 2, oy + t / 3, sw - 4, 3, C_STEEL); // Горизонтально за спиной
+    }
+    else if (dir == 3)
+    { // Направо - видна сбоку
+        DrawRectangle(ox + sw - 2, oy + t / 2, 6, 2, C_STEEL);
+    }
+    else if (dir == 2)
+    { // Налево
+        DrawRectangle(ox - 4, oy + t / 2, 6, 2, C_STEEL);
     }
 
     // 4. ГОЛОВА (Тень под шляпой)
-    DrawRectangle(ox + 6, oy + t/6, sw - 12, t/4, C_BLACK);
-    
+    DrawRectangle(ox + 6, oy + t / 6, sw - 12, t / 4, C_BLACK);
+
     // ГЛАЗА (только если не смотрим вверх)
-    if (dir != 1) {
+    if (dir != 1)
+    {
         int eye_blink = (GetTime() > 4.0 && (int)GetTime() % 5 == 0) ? 0 : 2; // Иногда моргает
-        if (eye_blink > 0) {
-            DrawRectangle(ox + 8, oy + t/4, 2, 2, C_EYE);
-            DrawRectangle(ox + sw - 10, oy + t/4, 2, 2, C_EYE);
+        if (eye_blink > 0)
+        {
+            DrawRectangle(ox + 8, oy + t / 4, 2, 2, C_EYE);
+            DrawRectangle(ox + sw - 10, oy + t / 4, 2, 2, C_EYE);
         }
     }
 
     // 5. ШЛЯПА (Сугегаса) — визитная карточка
     // Рисуем тремя слоями для создания конической формы
-    DrawRectangle(ox, oy + t/6, sw, 4, C_HAT_SH);           // Нижний край (тень)
-    DrawRectangle(ox + 2, oy + t/10, sw - 4, 4, C_HAT);    // Средняя часть
-    DrawRectangle(ox + sw/2 - 2, oy, 6, 4, C_HAT);         // Верхушка
+    DrawRectangle(ox, oy + t / 6, sw, 4, C_HAT_SH);       // Нижний край (тень)
+    DrawRectangle(ox + 2, oy + t / 10, sw - 4, 4, C_HAT); // Средняя часть
+    DrawRectangle(ox + sw / 2 - 2, oy, 6, 4, C_HAT);      // Верхушка
 }
 
 void RenderLevel(const Level *level)
@@ -198,31 +210,39 @@ void RenderLevel(const Level *level)
         tile = avail_h / level->height;
 
     // центрируем поле
-    int ox = (avail_w  - tile * level->width)  / 2;
+    int ox = (avail_w - tile * level->width) / 2;
     int oy = hud_h + (avail_h - tile * level->height) / 2;
 
     // todo
-    for (int y = 0; y < level->height; y++) {
-        for (int x = 0; x < level->width; x++) {
+    for (int y = 0; y < level->height; y++)
+    {
+        for (int x = 0; x < level->width; x++)
+        {
             int px = ox + x * tile;
             int py = oy + y * tile;
-            if (level->cells[y][x] == CELL_WALL) DrawWallTile(px, py, tile);
-            else DrawFloorTile(px, py, tile);
+            if (level->cells[y][x] == CELL_WALL)
+                DrawWallTile(px, py, tile);
+            else
+                DrawFloorTile(px, py, tile);
         }
     }
 
     // 2. Отрисовка целей
-    for (int i = 0; i < level->num_boxes; i++) {
+    for (int i = 0; i < level->num_boxes; i++)
+    {
         DrawGoalTile(ox + level->goals[i].x * tile, oy + level->goals[i].y * tile, tile);
     }
 
     // 3. Отрисовка ящиков
-    for (int i = 0; i < level->num_boxes; i++) {
+    for (int i = 0; i < level->num_boxes; i++)
+    {
         int bx = level->boxes[i].x;
         int by = level->boxes[i].y;
         bool on_goal = false;
-        for (int j = 0; j < level->num_boxes; j++) {
-            if (level->goals[j].x == bx && level->goals[j].y == by) {
+        for (int j = 0; j < level->num_boxes; j++)
+        {
+            if (level->goals[j].x == bx && level->goals[j].y == by)
+            {
                 on_goal = true;
                 break;
             }
@@ -233,18 +253,18 @@ void RenderLevel(const Level *level)
     // 4. Отрисовка ИГРОКА (Обновлено)
     // Если игрок стоит, фаза 0. Если идет — берем время.
     float walk_phase = 0;
-    if (level->character.is_moving) {
-        walk_phase = (float)GetTime() * 8.0f; 
+    if (level->character.is_moving)
+    {
+        walk_phase = (float)GetTime() * 8.0f;
     }
 
     DrawPlayerTile(
-        ox + level->player.x * tile, 
-        oy + level->player.y * tile, 
-        tile, 
-        walk_phase, 
-        level->character.dir, 
-        level->character.is_pushing
-    );
+        ox + level->player.x * tile,
+        oy + level->player.y * tile,
+        tile,
+        walk_phase,
+        level->character.dir,
+        level->character.is_pushing);
 
     DrawRectangle(0, 0, sw, hud_h, C_HUD_BG);
     DrawRectangle(0, hud_h - 1, sw, 1, C_HUD_LINE);
