@@ -16,8 +16,11 @@ typedef enum
 {
     SCREEN_MENU,
     SCREEN_DIFFICULTY,
+    SCREEN_SETTINGS,
     SCREEN_GAME,
     SCREEN_PAUSE,
+    SCREEN_HISTORY,
+    SCREEN_LOGIN,
     SCREEN_WIN,
     SCREEN_STATS,
     SCREEN_RULES
@@ -45,7 +48,7 @@ typedef struct
 typedef struct
 {
     int x, y;
-    int dir;         // 0-Down, 1-Up, 2-Left, 3-Right
+    int dir; // 0-Down, 1-Up, 2-Left, 3-Right
     bool is_moving;
     bool is_pushing;
 } Player;
