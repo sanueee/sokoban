@@ -272,7 +272,6 @@ void DrawStats(Screen *screen, int user_id)
     Session sessions[64];
     int count = get_sessions(user_id, sessions, 64);
 
-    // подсчёт агрегатов
     int total = count;
     int wins = 0;
     int total_steps = 0;
