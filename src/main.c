@@ -14,8 +14,8 @@ int main(void)
     SetExitKey(0);
 
     InitAudioDevice();
-    Music music_menu = LoadMusicStream("assets/menu.mp3");
-    Music music_game = LoadMusicStream("assets/game.mp3");
+    Music music_menu = LoadMusicStream("../assets/menu.mp3");
+    Music music_game = LoadMusicStream("../assets/game.mp3");
     PlayMusicStream(music_menu);
 
     Music *current_music = &music_menu;

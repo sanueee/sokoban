@@ -25,13 +25,10 @@
 #define C_BOX_ON_SH CLITERAL(Color){75, 130, 60, 255}
 #define C_BOX_ON_CROSS CLITERAL(Color){95, 160, 80, 255}
 
-#define C_HAT (Color){240, 225, 180, 255}
-#define C_HAT_SH (Color){190, 170, 125, 255}
-#define C_GI (Color){230, 240, 220, 255}
-#define C_HAKAMA (Color){80, 120, 90, 255}
-#define C_EYE (Color){200, 240, 180, 255}
-#define C_BLACK (Color){30, 42, 28, 255}
-#define C_STEEL (Color){190, 210, 195, 255}
+#define C_PLAYER_SKIN (Color){212, 197, 169, 255}
+#define C_PLAYER_BODY (Color){ 74, 124,  89, 255}
+#define C_PLAYER_LEGS (Color){ 58,  99,  73, 255}
+#define C_PLAYER_EYE  (Color){ 26,  46,  26, 255}
 
 #define C_HUD_BG CLITERAL(Color){25, 35, 25, 255}
 #define C_HUD_LINE CLITERAL(Color){70, 95, 62, 255}
@@ -123,74 +120,29 @@ static void DrawBoxTile(int x, int y, int t, int on_goal)
         DrawRectangleLines(x + 1, y + 1, t - 2, t - 2, C_BOX_ON_HI);
 }
 
-// dir: 0 - Down, 1 - Up, 2 - Left, 3 - Right
-static void DrawPlayerTile(int x, int y, int t, float walk_phase, int dir, bool is_pushing)
-{
-    // Параметры анимации
-    int frame = (int)(walk_phase * 10) % 4; // 4 кадра анимации
-    int bob = (frame % 2 == 0) ? 0 : 1;     // Легкое покачивание при ходьбе
+static void DrawPlayerTile(int x, int y, int t)
+{ // draws the player
+    int cx = x + t / 2;
 
-    // Если игрок стоит (walk_phase == 0), делаем эффект дыхания
-    if (walk_phase == 0)
-        bob = (int)(GetTime() * 2) % 2;
+    int head_size = t / 3;
+    int head_x = cx - head_size / 2;
+    int head_y = y + t / 10;
+    DrawRectangle(head_x, head_y, head_size, head_size, C_PLAYER_SKIN);
 
-    // Центрирование и базовые размеры
-    int ox = x + t / 10;
-    int oy = y + bob;
-    int sw = t - (t / 5); // ширина персонажа
+    DrawRectangle(head_x + head_size / 5.5, head_y + head_size / 3, 2, 2, C_PLAYER_EYE);
+    DrawRectangle(head_x + head_size * 4 / 5.5, head_y + head_size / 3, 2, 2, C_PLAYER_EYE);
 
-    // 1. Отрисовка НОГ (Хакама)
-    // При движении вверх/вниз ноги меняются местами. При толкании — упор.
-    if (is_pushing)
-    {
-        DrawRectangle(ox + 2, oy + t * 2 / 3, sw - 4, t / 3, C_HAKAMA); // Широкая стойка
-    }
-    else
-    {
-        int leg_off = (frame % 2 == 0) ? 4 : -4;
-        DrawRectangle(ox + leg_off, oy + t * 2 / 3, sw / 3, t / 3, C_HAKAMA);           // Левая нога
-        DrawRectangle(ox + leg_off * leg_off, oy + t * 2 / 3, sw / 3, t / 3, C_HAKAMA); // Правая нога
-    }
+    int body_w = t * 2 / 5;
+    int body_h = t / 3;
+    int body_x = cx - body_w / 2;
+    int body_y = head_y + head_size + 1;
+    DrawRectangle(body_x, body_y, body_w, body_h, C_PLAYER_BODY);
 
-    // 2. Отрисовка ТУЛОВИЩА (Белое кимоно)
-    int body_h = t / 2;
-    int push_offset = (is_pushing && (dir == 2 || dir == 3)) ? (dir == 3 ? 4 : -4) : 0;
-    DrawRectangle(ox + 4 + push_offset, oy + t / 3, sw - 8, body_h, C_GI);
-
-    // 3. КАТАНА
-    // При движении ВВЕРХ (dir == 1) рисуем за спиной по диагонали
-    if (dir == 1)
-    {
-        DrawRectangle(ox + 2, oy + t / 3, sw - 4, 3, C_STEEL); // Горизонтально за спиной
-    }
-    else if (dir == 3)
-    { // Направо - видна сбоку
-        DrawRectangle(ox + sw - 2, oy + t / 2, 6, 2, C_STEEL);
-    }
-    else if (dir == 2)
-    { // Налево
-        DrawRectangle(ox - 4, oy + t / 2, 6, 2, C_STEEL);
-    }
-
-    // 4. ГОЛОВА (Тень под шляпой)
-    DrawRectangle(ox + 6, oy + t / 6, sw - 12, t / 4, C_BLACK);
-
-    // ГЛАЗА (только если не смотрим вверх)
-    if (dir != 1)
-    {
-        int eye_blink = (GetTime() > 4.0 && (int)GetTime() % 5 == 0) ? 0 : 2; // Иногда моргает
-        if (eye_blink > 0)
-        {
-            DrawRectangle(ox + 8, oy + t / 4, 2, 2, C_EYE);
-            DrawRectangle(ox + sw - 10, oy + t / 4, 2, 2, C_EYE);
-        }
-    }
-
-    // 5. ШЛЯПА (Сугегаса) — визитная карточка
-    // Рисуем тремя слоями для создания конической формы
-    DrawRectangle(ox, oy + t / 6, sw, 4, C_HAT_SH);       // Нижний край (тень)
-    DrawRectangle(ox + 2, oy + t / 10, sw - 4, 4, C_HAT); // Средняя часть
-    DrawRectangle(ox + sw / 2 - 2, oy, 6, 4, C_HAT);      // Верхушка
+    int leg_w = body_w / 3;
+    int leg_h = t / 5;
+    int leg_y = body_y + body_h;
+    DrawRectangle(body_x + 1, leg_y, leg_w, leg_h, C_PLAYER_LEGS);
+    DrawRectangle(body_x + body_w - leg_w - 1, leg_y, leg_w, leg_h, C_PLAYER_LEGS);
 }
 
 void RenderLevel(const Level *level)
@@ -201,10 +153,8 @@ void RenderLevel(const Level *level)
     ClearBackground(C_BG);
 
     int hud_h = 50;
-
     int avail_w = sw;
     int avail_h = sh - hud_h;
-
     int tile = avail_w / level->width;
     if (avail_h / level->height < tile)
         tile = avail_h / level->height;
@@ -213,7 +163,7 @@ void RenderLevel(const Level *level)
     int ox = (avail_w - tile * level->width) / 2;
     int oy = hud_h + (avail_h - tile * level->height) / 2;
 
-    // todo
+    // клетки
     for (int y = 0; y < level->height; y++)
     {
         for (int x = 0; x < level->width; x++)
@@ -227,13 +177,13 @@ void RenderLevel(const Level *level)
         }
     }
 
-    // 2. Отрисовка целей
+    // целевые
     for (int i = 0; i < level->num_boxes; i++)
     {
         DrawGoalTile(ox + level->goals[i].x * tile, oy + level->goals[i].y * tile, tile);
     }
 
-    // 3. Отрисовка ящиков
+    // коробки
     for (int i = 0; i < level->num_boxes; i++)
     {
         int bx = level->boxes[i].x;
@@ -250,30 +200,15 @@ void RenderLevel(const Level *level)
         DrawBoxTile(ox + bx * tile, oy + by * tile, tile, on_goal);
     }
 
-    // 4. Отрисовка ИГРОКА (Обновлено)
-    // Если игрок стоит, фаза 0. Если идет — берем время.
-    float walk_phase = 0;
-    if (level->character.is_moving)
-    {
-        walk_phase = (float)GetTime() * 8.0f;
-    }
+    // игрок
+    DrawPlayerTile(ox + level->player.x * tile, oy + level->player.y * tile, tile);
 
-    DrawPlayerTile(
-        ox + level->player.x * tile,
-        oy + level->player.y * tile,
-        tile,
-        walk_phase,
-        level->character.dir,
-        level->character.is_pushing);
-
+    // hud
     DrawRectangle(0, 0, sw, hud_h, C_HUD_BG);
     DrawRectangle(0, hud_h - 1, sw, 1, C_HUD_LINE);
-
     DrawText(TextFormat("Steps: %d", level->step_count), 14, 15, 20, C_HUD_TEXT);
-
     int total_s = (int)level->time_elapsed;
     DrawText(TextFormat("Time: %02d:%02d", total_s / 60, total_s % 60), sw / 2 - 52, 15, 20, C_HUD_TEXT);
-
     const char *diff_names[] = {"Easy", "Medium", "Hard"};
     const char *diff_str = diff_names[level->difficulty];
     int diff_w = MeasureText(diff_str, 20);
