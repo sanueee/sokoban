@@ -44,10 +44,35 @@ typedef struct
     int step_count;
 } GameState;
 
-// узел стека отмены (линейный список)
+typedef enum
+{
+    UNDO_MOVE,
+    UNDO_PUSH
+} UndoType;
+
+typedef struct
+{
+    Position player_pos;
+} UndoMove;
+
+typedef struct
+{
+    Position player_pos;
+    int box_index;
+    Position box_pos;
+} UndoPush;
+
+typedef union
+{
+    UndoMove move;
+    UndoPush push;
+} UndoData;
+
 typedef struct UndoNode
 {
-    GameState state;
+    UndoType type;
+    UndoData data;
+    int step_count;
     struct UndoNode *next;
 } UndoNode;
 
@@ -63,8 +88,8 @@ typedef struct
     Difficulty difficulty;
     int step_count;
     float time_elapsed;
-    UndoNode *undo_head;  // вершина стека (linked list)
-    int undo_count;       // количество элементов в стеке
+    UndoNode *undo_head;
+    int undo_count;
     GameState initial_state;
 } Level;
 

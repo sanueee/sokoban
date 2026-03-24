@@ -12,14 +12,30 @@ static int BoxAt(const Level *level, int x, int y)
     return -1;
 }
 
-void PushUndo(Level *level)
+void PushUndoMove(Level *level)
 {
     UndoNode *node = (UndoNode *)malloc(sizeof(UndoNode));
     if (!node) return;
 
-    node->state.player = level->player;
-    memcpy(node->state.boxes, level->boxes, sizeof(level->boxes));
-    node->state.step_count = level->step_count;
+    node->type = UNDO_MOVE;
+    node->data.move.player_pos = level->player;
+    node->step_count = level->step_count;
+
+    node->next = level->undo_head;
+    level->undo_head = node;
+    level->undo_count++;
+}
+
+void PushUndoPush(Level *level, int box_index)
+{
+    UndoNode *node = (UndoNode *)malloc(sizeof(UndoNode));
+    if (!node) return;
+
+    node->type = UNDO_PUSH;
+    node->data.push.player_pos = level->player;
+    node->data.push.box_index = box_index;
+    node->data.push.box_pos = level->boxes[box_index];
+    node->step_count = level->step_count;
 
     node->next = level->undo_head;
     level->undo_head = node;
@@ -31,10 +47,18 @@ void PopUndo(Level *level)
     if (!level->undo_head) return;
 
     UndoNode *top = level->undo_head;
-    level->player = top->state.player;
-    memcpy(level->boxes, top->state.boxes, sizeof(level->boxes));
-    level->step_count = top->state.step_count;
 
+    if (top->type == UNDO_PUSH)
+    {
+        level->boxes[top->data.push.box_index] = top->data.push.box_pos;
+        level->player = top->data.push.player_pos;
+    }
+    else
+    {
+        level->player = top->data.move.player_pos;
+    }
+
+    level->step_count = top->step_count;
     level->undo_head = top->next;
     level->undo_count--;
     free(top);
@@ -108,12 +132,12 @@ void HandleInput(Level *level)
         if (level->cells[bny][bnx] == CELL_WALL) return;
         if (BoxAt(level, bnx, bny) != -1) return;
 
-        PushUndo(level);
+        PushUndoPush(level, box_idx);
         level->boxes[box_idx].x = bnx;
         level->boxes[box_idx].y = bny;
     }
     else
-        PushUndo(level);
+        PushUndoMove(level);
 
     level->player.x = nx;
     level->player.y = ny;
