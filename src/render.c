@@ -209,6 +209,19 @@ void RenderLevel(const Level *level)
     DrawText(TextFormat("Steps: %d", level->step_count), 14, 15, 20, C_HUD_TEXT);
     int total_s = (int)level->time_elapsed;
     DrawText(TextFormat("Time: %02d:%02d", total_s / 60, total_s % 60), sw / 2 - 52, 15, 20, C_HUD_TEXT);
+
+    // процент ящиков на целях
+    int on_goal = 0;
+    for (int i = 0; i < level->num_boxes; i++)
+        for (int j = 0; j < level->num_boxes; j++)
+            if (level->boxes[i].x == level->goals[j].x &&
+                level->boxes[i].y == level->goals[j].y)
+            { on_goal++; break; }
+    int pct = level->num_boxes > 0 ? (on_goal * 100 / level->num_boxes) : 0;
+    const char *pct_str = TextFormat("%d/%d  %d%%", on_goal, level->num_boxes, pct);
+    int pct_w = MeasureText(pct_str, 20);
+    DrawText(pct_str, sw / 2 - 52 - pct_w - 40, 15, 20, on_goal == level->num_boxes ? C_HUD_TEXT : C_HUD_DIM);
+
     const char *diff_names[] = {"Easy", "Medium", "Hard"};
     const char *diff_str = diff_names[level->difficulty];
     int diff_w = MeasureText(diff_str, 20);
