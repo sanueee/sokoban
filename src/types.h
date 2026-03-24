@@ -2,7 +2,6 @@
 #define _TYPES_H
 
 #define MAX_BOXES 10
-#define MAX_UNDO 512
 #define MAX_FIELD 20
 #include <stdbool.h>
 
@@ -45,20 +44,27 @@ typedef struct
     int step_count;
 } GameState;
 
+// узел стека отмены (линейный список)
+typedef struct UndoNode
+{
+    GameState state;
+    struct UndoNode *next;
+} UndoNode;
+
 typedef struct
 {
     int session_id;
     int width, height;
     CellType cells[MAX_FIELD][MAX_FIELD];
-    Position goals[MAX_BOXES]; // куда ставить
+    Position goals[MAX_BOXES];
     int num_boxes;
-    Position boxes[MAX_BOXES]; // откуда двигать
+    Position boxes[MAX_BOXES];
     Position player;
     Difficulty difficulty;
     int step_count;
     float time_elapsed;
-    GameState undo_stack[MAX_UNDO];
-    int undo_top;
+    UndoNode *undo_head;  // вершина стека (linked list)
+    int undo_count;       // количество элементов в стеке
     GameState initial_state;
 } Level;
 

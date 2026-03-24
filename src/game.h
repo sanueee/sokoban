@@ -7,5 +7,6 @@ void HandleInput(Level *level);
 int CheckWin(const Level *level);
 void PushUndo(Level *level);
 void PopUndo(Level *level);
+void FreeUndoStack(Level *level);
 
 #endif

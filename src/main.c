@@ -1,6 +1,7 @@
 #include "raylib.h"
 #include "types.h"
 #include "level.h"
+#include <stdlib.h>
 #include "render.h"
 #include "game.h"
 #include "ui.h"
@@ -25,6 +26,8 @@ int main(void)
     Screen screen = SCREEN_LOGIN;
     Difficulty diff = DIFF_EASY;
     Level level = {0};
+    level.undo_head = NULL;
+    level.undo_count = 0;
     int quit = 0;
     int user_id = -1;
     char username[64] = {0};
@@ -87,7 +90,7 @@ int main(void)
             break;
         case SCREEN_PAUSE:
             RenderLevel(&level);
-            DrawPause(&screen, &level, user_id, diff); // передаём для записи при выходе
+            DrawPause(&screen, &level, user_id, diff);
             break;
         case SCREEN_WIN:
             RenderLevel(&level);
@@ -106,6 +109,7 @@ int main(void)
         EndDrawing();
     }
 
+    FreeUndoStack(&level);
     close();
 
     UnloadMusicStream(music_menu);

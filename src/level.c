@@ -1,4 +1,5 @@
 #include "level.h"
+#include "game.h"
 #include "types.h"
 #include <stdlib.h>
 #include <time.h>
@@ -231,11 +232,13 @@ static int HasDeadlock(Level *level)
 }
 
 Level GenerateLevel(Difficulty difficulty)
-{ // main function
+{
     srand(time(NULL));
     Level level = {0};
     level.difficulty = difficulty;
-
+    level.undo_head = NULL;
+    level.undo_count = 0;
+ 
     int valid = 0;
     while (!valid)
     {
@@ -256,15 +259,15 @@ Level GenerateLevel(Difficulty difficulty)
                 level.num_boxes = 7 + rand() % 3;
                 break;
         }
-
+ 
         for (size_t i = 0; i < level.height; i++)
             for (size_t j = 0; j < level.width; j++)
                 level.cells[i][j] = CELL_WALL;
-
+ 
         GenerateMaze(&level);
-
+ 
         if (!PlaceGoalsAndBoxes(&level)) continue;
-
+ 
         int player_placed = 0;
         for (int a = 0; a < 500 && !player_placed; a++) {
             int px = 1 + rand() % (level.width - 2);
@@ -276,36 +279,34 @@ Level GenerateLevel(Difficulty difficulty)
             }
         }
         if (!player_placed) continue;
-
+ 
         int target_moves = (difficulty == DIFF_EASY) ? 30 : (difficulty == DIFF_MEDIUM ? 60 : 100);
         ReverseSolve(&level, target_moves);
-
-        // отбраковываем уровни, где генератор сдался и оставил ящики на целях
+ 
         int boxes_on_goals = 0;
         for (int i = 0; i < level.num_boxes; i++)
         {
             if (IsOnGoal(&level, level.boxes[i])) boxes_on_goals++;
         }
-        if (boxes_on_goals > 0) continue; // Все ящики должны быть сдвинуты с целей
-
-        // отбраковываем уровни, которые закончились очевидным дедлоком
+        if (boxes_on_goals > 0) continue;
+ 
         if (HasDeadlock(&level)) continue;
-
+ 
         level.initial_state.player = level.player;
         memcpy(level.initial_state.boxes, level.boxes, sizeof(level.boxes));
         level.initial_state.step_count = 0;
-
+ 
         valid = 1;
     }
-
+ 
     return level;
 }
-
+ 
 void RestartLevel(Level *level)
-{ // set session parameters to zero.
+{
+    FreeUndoStack(level);
     level->player = level->initial_state.player;
     level->step_count = 0;
     level->time_elapsed = 0;
-    level->undo_top = 0;
     memcpy(level->boxes, level->initial_state.boxes, sizeof(level->boxes));
 }

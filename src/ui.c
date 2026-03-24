@@ -1,6 +1,7 @@
 #include "ui.h"
 #include "raylib.h"
 #include "level.h"
+#include "game.h"
 #include <math.h>
 #include <string.h>
 
@@ -71,10 +72,6 @@ void DrawMenu(Screen *screen, int *quit, const char *username)
     const char *title = "SOKOBAN";
     DrawText(title, (sw - MeasureText(title, tfs)) / 2, sh / 6, tfs, C_ACCENT);
 
-    // const char *sub = "push all boxes onto their goals";
-    // int sfs = 18;
-    // DrawText(sub, (sw - MeasureText(sub, sfs)) / 2, sh / 6 + tfs + 10, sfs, C_DIM);
-
     int bw = 260, bh = 52, gap = 14, bx = sw / 2 - bw / 2, by = sh / 2;
 
     if (Button("PLAY", bx, by, bw, bh))
@@ -123,6 +120,7 @@ void DrawDifficultySelect(Screen *screen, Difficulty *diff, Level *level)
         if (Button(labels[i], bx, y, bw, bh))
         {
             *diff = (Difficulty)i;
+            FreeUndoStack(level);        // освобождаем старый стек перед новым уровнем
             *level = GenerateLevel(*diff);
             *screen = SCREEN_GAME;
         }
@@ -184,6 +182,7 @@ void DrawPause(Screen *screen, Level *level, int user_id, Difficulty diff)
     if (Button("MAIN MENU", bx, by + 2 * (bh + gap), bw, bh))
     {
         save_session(user_id, diff, level->step_count, level->time_elapsed, 0);
+        FreeUndoStack(level);            // освобождаем стек при выходе в меню
         *screen = SCREEN_MENU;
     }
 }
@@ -210,13 +209,20 @@ void DrawWin(Screen *screen, Level *level, Difficulty diff)
 
     if (Button("PLAY AGAIN", bx, by, bw, bh))
     {
+        FreeUndoStack(level);            // освобождаем перед новым уровнем
         *level = GenerateLevel(diff);
         *screen = SCREEN_GAME;
     }
     if (Button("CHANGE DIFF", bx, by + bh + gap, bw, bh))
+    {
+        FreeUndoStack(level);
         *screen = SCREEN_DIFFICULTY;
+    }
     if (Button("MAIN MENU", bx, by + 2 * (bh + gap), bw, bh))
+    {
+        FreeUndoStack(level);
         *screen = SCREEN_MENU;
+    }
 }
 
 void DrawRules(Screen *screen)
@@ -302,7 +308,6 @@ void DrawStats(Screen *screen, int user_id)
 
     DrawRectangle(sx, sy + gap * 6, 500, 1, C_BORDER);
 
-    // последние 5 игр
     DrawText("Recent games:", sx, sy + gap * 6 + 16, fs, C_DIM);
     int max_show = count < 5 ? count : 5;
     const char *dnames[] = {"Easy", "Medium", "Hard"};
@@ -341,7 +346,6 @@ void DrawHistory(Screen *screen, int user_id)
     const char *dnames[] = {"Easy", "Medium", "Hard"};
     int tx = sw / 2 - 400, ty = 130, fs = 20;
 
-    // заголовки
     DrawText("Difficulty", tx, ty, fs, C_DIM);
     DrawText("Steps", tx + 180, ty, fs, C_DIM);
     DrawText("Time", tx + 300, ty, fs, C_DIM);

@@ -1,13 +1,11 @@
 #include "game.h"
 #include "raylib.h"
+#include <stdlib.h>
 #include <string.h>
 #include "level.h"
 
-static const int DX[4] = {0, 0, -1, 1};
-static const int DY[4] = {-1, 1, 0, 0};
-
 static int BoxAt(const Level *level, int x, int y)
-{ // gets box index on pos x, y
+{
     for (int i = 0; i < level->num_boxes; i++)
         if (level->boxes[i].x == x && level->boxes[i].y == y)
             return i;
@@ -15,27 +13,46 @@ static int BoxAt(const Level *level, int x, int y)
 }
 
 void PushUndo(Level *level)
-{ // adds state in stack
-    if (level->undo_top >= MAX_UNDO) return;
-    level->undo_stack[level->undo_top].player = level->player;
-    memcpy(level->undo_stack[level->undo_top].boxes,
-           level->boxes, sizeof(level->boxes));
-    level->undo_stack[level->undo_top].step_count = level->step_count;
-    level->undo_top++;
+{
+    UndoNode *node = (UndoNode *)malloc(sizeof(UndoNode));
+    if (!node) return;
+
+    node->state.player = level->player;
+    memcpy(node->state.boxes, level->boxes, sizeof(level->boxes));
+    node->state.step_count = level->step_count;
+
+    node->next = level->undo_head;
+    level->undo_head = node;
+    level->undo_count++;
 }
 
 void PopUndo(Level *level)
-{ // undo
-    if (level->undo_top <= 0) return;
-    level->undo_top--;
-    level->player = level->undo_stack[level->undo_top].player;
-    memcpy(level->boxes,
-           level->undo_stack[level->undo_top].boxes, sizeof(level->boxes));
-    level->step_count = level->undo_stack[level->undo_top].step_count;
+{
+    if (!level->undo_head) return;
+
+    UndoNode *top = level->undo_head;
+    level->player = top->state.player;
+    memcpy(level->boxes, top->state.boxes, sizeof(level->boxes));
+    level->step_count = top->state.step_count;
+
+    level->undo_head = top->next;
+    level->undo_count--;
+    free(top);
+}
+
+void FreeUndoStack(Level *level)
+{
+    while (level->undo_head)
+    {
+        UndoNode *tmp = level->undo_head;
+        level->undo_head = tmp->next;
+        free(tmp);
+    }
+    level->undo_count = 0;
 }
 
 int CheckWin(const Level *level)
-{ // checks if all boxes on goals
+{
     for (int i = 0; i < level->num_boxes; i++)
     {
         int on_goal = 0;
@@ -54,7 +71,7 @@ int CheckWin(const Level *level)
 }
 
 void HandleInput(Level *level)
-{ // controlling the player
+{
     int dx = 0, dy = 0;
 
     if (IsKeyPressed(KEY_UP)    || IsKeyPressed(KEY_W)) { dx = 0;  dy = -1; }
@@ -84,7 +101,7 @@ void HandleInput(Level *level)
     int box_idx = BoxAt(level, nx, ny);
 
     if (box_idx != -1)
-    { // met the box
+    {
         int bnx = nx + dx;
         int bny = ny + dy;
 
@@ -94,7 +111,7 @@ void HandleInput(Level *level)
         PushUndo(level);
         level->boxes[box_idx].x = bnx;
         level->boxes[box_idx].y = bny;
-    } 
+    }
     else
         PushUndo(level);
 
