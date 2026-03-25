@@ -244,19 +244,19 @@ Level GenerateLevel(Difficulty difficulty)
     {
         switch (difficulty) {
             case DIFF_EASY:
-                level.width = 9 + rand() % 4;
-                level.height = 9 + rand() % 4;
+                level.width = 9 + rand() % 3;
+                level.height = 9 + rand() % 3;
                 level.num_boxes = 3 + rand() % 2;
                 break;
             case DIFF_MEDIUM:
-                level.width = 13 + rand() % 4;
-                level.height = 13 + rand() % 4;
+                level.width = 11 + rand() % 2;
+                level.height = 11 + rand() % 2;
                 level.num_boxes = 5 + rand() % 2;
                 break;
             case DIFF_HARD:
-                level.width = 17 + rand() % 4;
-                level.height = 17 + rand() % 4;
-                level.num_boxes = 7 + rand() % 3;
+                level.width = 13 + rand() % 2;
+                level.height = 13 + rand() % 2;
+                level.num_boxes = 7 + rand() % 2;
                 break;
         }
  

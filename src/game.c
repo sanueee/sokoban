@@ -4,6 +4,9 @@
 #include <string.h>
 #include "level.h"
 
+static const int MDX[4] = {0, 0, -1, 1};
+static const int MDY[4] = {-1, 1, 0, 0};
+
 static int BoxAt(const Level *level, int x, int y)
 {
     for (int i = 0; i < level->num_boxes; i++)
@@ -117,6 +120,36 @@ void HandleInput(Level *level)
 
     if (dx == 0 && dy == 0) return;
 
+    int nx = level->player.x + dx;
+    int ny = level->player.y + dy;
+
+    if (level->cells[ny][nx] == CELL_WALL) return;
+
+    int box_idx = BoxAt(level, nx, ny);
+
+    if (box_idx != -1)
+    {
+        int bnx = nx + dx;
+        int bny = ny + dy;
+
+        if (level->cells[bny][bnx] == CELL_WALL) return;
+        if (BoxAt(level, bnx, bny) != -1) return;
+
+        PushUndoPush(level, box_idx);
+        level->boxes[box_idx].x = bnx;
+        level->boxes[box_idx].y = bny;
+    }
+    else
+        PushUndoMove(level);
+
+    level->player.x = nx;
+    level->player.y = ny;
+    level->step_count++;
+}
+
+void ApplyMove(Level *level, int dir)
+{
+    int dx = MDX[dir], dy = MDY[dir];
     int nx = level->player.x + dx;
     int ny = level->player.y + dy;
 
