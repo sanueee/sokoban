@@ -7,6 +7,8 @@
 #include "db.h"
 #include "solver.h"
 #include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
 
 #define SOLVER_STEP_INTERVAL 0.12f
 
@@ -82,7 +84,23 @@ int main(void)
                 if (mod && IsKeyPressed(KEY_B))
                 {
                     RestartLevel(&level);
-                    SolveLevel(&level, &solver);
+                    {
+                        static const char *diff_names[] = {"easy", "medium", "hard"};
+                        static FILE *solver_log = NULL;
+                        struct timespec _t0, _t1;
+                        clock_gettime(CLOCK_MONOTONIC, &_t0);
+                        SolveLevel(&level, &solver);
+                        clock_gettime(CLOCK_MONOTONIC, &_t1);
+                        double _ms = (_t1.tv_sec - _t0.tv_sec) * 1000.0 +
+                                     (_t1.tv_nsec - _t0.tv_nsec) / 1e6;
+                        if (!solver_log) solver_log = fopen("../tests/test_solver.txt", "a");
+                        if (solver_log)
+                        {
+                            fprintf(solver_log, "%s;%d;%.2f\n",
+                                    diff_names[diff], level.num_boxes, _ms);
+                            fflush(solver_log);
+                        }
+                    }
                 }
 
                 HandleInput(&level);

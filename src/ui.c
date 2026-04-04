@@ -4,6 +4,29 @@
 #include "game.h"
 #include <math.h>
 #include <string.h>
+#include <stdio.h>
+#include <time.h>
+
+static const char *s_diff_names[] = {"easy", "medium", "hard"};
+
+static Level GenerateLevelTimed(Difficulty d)
+{
+    struct timespec t0, t1;
+    clock_gettime(CLOCK_MONOTONIC, &t0);
+    Level lvl = GenerateLevel(d);
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    double ms = (t1.tv_sec - t0.tv_sec) * 1000.0 + (t1.tv_nsec - t0.tv_nsec) / 1e6;
+
+    static FILE *gen_log = NULL;
+    if (!gen_log) gen_log = fopen("../tests/test_gen.txt", "a");
+    if (gen_log)
+    {
+        fprintf(gen_log, "%s;%d;%.2f\n", s_diff_names[d], lvl.num_boxes, ms);
+        fflush(gen_log);
+    }
+
+    return lvl;
+}
 
 #define C_BG CLITERAL(Color){35, 45, 35, 255}
 #define C_PANEL CLITERAL(Color){45, 58, 42, 240}
@@ -99,9 +122,9 @@ void DrawDifficultySelect(Screen *screen, Difficulty *diff, Level *level)
 
     const char *labels[] = {"EASY", "MEDIUM", "HARD"};
     const char *descs[] = {
-        "9-12 tiles  |  3-4 boxes  |  ~30 moves",
-        "13-16 tiles |  5-6 boxes  |  ~60 moves",
-        "17-20 tiles |  7-9 boxes  |  ~100 moves",
+        "9-11 tiles  |  3-4 boxes ",
+        "11-12 tiles |  5-6 boxes ",
+        "13-14 tiles |  7-8 boxes ",
     };
     Color dots[] = {
         {55, 185, 90, 255},
@@ -121,7 +144,7 @@ void DrawDifficultySelect(Screen *screen, Difficulty *diff, Level *level)
         {
             *diff = (Difficulty)i;
             FreeUndoStack(level);        // освобождаем старый стек перед новым уровнем
-            *level = GenerateLevel(*diff);
+            *level = GenerateLevelTimed(*diff);
             *screen = SCREEN_GAME;
         }
         DrawText(descs[i], bx + bw + 20, y + (bh - 18) / 2, 18, C_DIM);
@@ -210,7 +233,7 @@ void DrawWin(Screen *screen, Level *level, Difficulty diff)
     if (Button("PLAY AGAIN", bx, by, bw, bh))
     {
         FreeUndoStack(level);            // освобождаем перед новым уровнем
-        *level = GenerateLevel(diff);
+        *level = GenerateLevelTimed(diff);
         *screen = SCREEN_GAME;
     }
     if (Button("CHANGE DIFF", bx, by + bh + gap, bw, bh))
