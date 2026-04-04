@@ -77,4 +77,5 @@ for ax, metric, title in [
     ax.spines[["top", "right"]].set_visible(False)
 
 plt.tight_layout()
+plt.savefig("plot.png", dpi=150, bbox_inches="tight")
 plt.show()
