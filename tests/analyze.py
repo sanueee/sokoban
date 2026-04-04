@@ -14,23 +14,38 @@ DIFFICULTY_ORDER = ["easy", "medium", "hard"]
 DIFFICULTY_RU    = {"easy": "Лёгкий", "medium": "Средний", "hard": "Тяжёлый"}
 COLORS           = {"easy": "#4CAF50", "medium": "#FF9800", "hard": "#F44336"}
 
-print("  СТАТИСТИКА ПО СЛОЖНОСТИ (мс)")
+def print_boxes_table(title, data, col_label):
+    print(f"\nТаблица: {title}")
+    print(f"{'Кол-во ящиков':<16} {'Среднее (мс)':>14} {'Мин (мс)':>12} {'Макс (мс)':>12}")
+    print(f"{'─'*56}")
+    for _, row in data.iterrows():
+        print(f"{int(row['num_boxes']):<16} {row['mean']:>14.2f} {row['min']:>12.2f} {row['max']:>12.2f}")
 
-for metric, label in [("gen_ms", "Генерация"), ("solve_ms", "Решение")]:
-    print(f"\n{'─'*65}")
-    print(f"  {label}")
-    print(f"{'─'*65}")
-    print(f"  {'Сложность':<12} {'Min':>10} {'Mean':>10} {'Max':>10}  {'N':>6}")
-    print(f"  {'─'*52}")
-    for diff in DIFFICULTY_ORDER:
-        sub = df[df.difficulty == diff][metric]
-        if sub.empty:
-            continue
-        print(f"  {DIFFICULTY_RU[diff]:<12} "
-              f"{sub.min():>10.2f} "
-              f"{sub.mean():>10.2f} "
-              f"{sub.max():>10.2f}  "
-              f"{len(sub):>6}")
+
+# Таблица 1: Генерация
+gen_stat = (
+    df.groupby("num_boxes")["gen_ms"]
+      .agg(mean="mean", min="min", max="max")
+      .reset_index()
+)
+print_boxes_table("Статистика времени генерации (мс)", gen_stat, "gen_ms")
+
+# Таблица 2: Решение
+solve_stat = (
+    df.groupby("num_boxes")["solve_ms"]
+      .agg(mean="mean", min="min", max="max")
+      .reset_index()
+)
+print_boxes_table("Статистика времени решения (мс)", solve_stat, "solve_ms")
+
+# Таблица 3: Успех решения
+print(f"\nТаблица: Успех поиска решений")
+print(f"{'Кол-во ящиков':<16} {'Решено':>8} {'Всего':>8} {'% успеха':>10}")
+print(f"{'─'*44}")
+success_stat = df.groupby("num_boxes")["solved"].agg(solved="sum", total="count").reset_index()
+for _, row in success_stat.iterrows():
+    pct = row["solved"] / row["total"] * 100
+    print(f"{int(row['num_boxes']):<16} {int(row['solved']):>8} {int(row['total']):>8} {pct:>9.1f}%")
 
 print(f"\n{'='*65}\n")
 
