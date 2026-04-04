@@ -34,6 +34,15 @@ add_executable(sokoban
 
 target_link_libraries(sokoban raylib SQLite::SQLite3)
 
+add_executable(sokoban_bench
+    tests/bench.c
+    src/solver.c
+    src/level.c
+    src/game.c
+)
+target_include_directories(sokoban_bench PRIVATE src)
+target_link_libraries(sokoban_bench raylib)
+
 # Windows: copy required DLLs next to the executable after build
 if(WIN32)
     add_custom_command(TARGET sokoban POST_BUILD
