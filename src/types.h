@@ -78,6 +78,57 @@ typedef struct UndoNode
 
 typedef struct
 {
+    int *moves;
+    int num_moves;
+    int current_move;
+    bool active;
+    float timer;
+} Solver;
+
+typedef struct
+{
+    unsigned short player;
+    unsigned short boxes[MAX_BOXES];
+} PackedState;
+
+// узел A*
+typedef struct
+{
+    PackedState state;
+    int parent;      // индекс родителя в пуле (-1 для корня)
+    int direction;   // направление хода (0-3), -1 для корня
+    int g;           // стоимость пути от старта
+    int f;           // g + h (приоритет в куче)
+} AStarNode;
+
+// пул узлов (динамический массив, растёт ×2)
+typedef struct
+{
+    AStarNode *data;
+    int count;
+    int capacity;
+} NodePool;
+
+// бинарная мин-куча по f (приоритетная очередь)
+typedef struct
+{
+    int *idx;       // индексы в NodePool
+    int size;
+    int capacity;
+} MinHeap;
+
+// хеш-таблица с открытой адресацией (PackedState)
+typedef struct
+{
+    PackedState *states;
+    char *occupied;
+    int capacity;
+    int mask;        // capacity - 1
+    int count;
+} HashSet;
+
+typedef struct
+{
     int session_id;
     int width, height;
     CellType cells[MAX_FIELD][MAX_FIELD];

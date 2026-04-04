@@ -23,6 +23,7 @@ find_package(raylib REQUIRED)
 find_package(SQLite3 REQUIRED)
 
 add_executable(sokoban
+    src/solver.c
     src/main.c
     src/game.c
     src/level.c
