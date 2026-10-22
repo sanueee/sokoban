@@ -1,0 +1,12 @@
+==82913== Massif, a heap profiler
+==82913== Copyright (C) 2003-2025, and GNU GPL'd, by Nicholas Nethercote et al.
+==82913== Using Valgrind-3.27.1 and LibVEX; rerun with -h for copyright info
+==82913== Command: ./sokoban_bench 3
+==82913== 
+==82913== 
+==82913== Process terminating with default action of signal 15 (SIGTERM)
+==82913==    at 0x400287D: HeapSiftDown (solver.c:315)
+==82913==    by 0x400287D: HeapPop (solver.c:353)
+==82913==    by 0x400287D: SolveLevel (solver.c:559)
+==82913==    by 0x400133B: main (bench.c:36)
+==82913== 

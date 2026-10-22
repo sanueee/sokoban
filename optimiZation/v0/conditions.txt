@@ -1,0 +1,9 @@
+Дата: 2026-10-22 14:30
+Версия: исходная (v0), коммит acbeb73 + переименование open/close (db.c/db.h/main.c)
+Команда (время): (ulimit -v 4000000; ./sokoban_bench 20)
+Сборка: cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo (-O2 -g)
+Компилятор: gcc (Debian 15.2.0-17) 15.2.0
+Процессор: AMD Ryzen 5 4500U with Radeon Graphics
+Память: 7.8Gi
+ОС: Linux 6.19.14+kali-amd64
+Профилировщик: valgrind-3.27.1

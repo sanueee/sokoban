@@ -1,0 +1,45 @@
+--------------------------------------------------------------------------------
+Profile data file 'cg_easy_medium.out' (creator: callgrind-3.27.1)
+--------------------------------------------------------------------------------
+I1 cache: 
+D1 cache: 
+LL cache: 
+Timerange: Basic block 0 - 200071110
+Trigger: dump easy_medium
+Profiled target:  ./sokoban_bench 3 (PID 82177, part 1)
+Events recorded:  Ir
+Events shown:     Ir
+Event sort order: Ir
+Thresholds:       99
+Include dirs:     
+User annotated:   
+Auto-annotation:  on
+
+--------------------------------------------------------------------------------
+Ir                   
+--------------------------------------------------------------------------------
+946,534,662 (100.0%)  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+Ir                    file:function
+--------------------------------------------------------------------------------
+946,534,662 (100.0%)  ???:0x000000000001dd80 [/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2]
+945,271,593 (99.87%)  ???:(below main) [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+945,271,582 (99.87%)  ./csu/../csu/libc-start.c:__libc_start_main@@GLIBC_2.34 [/usr/lib/x86_64-linux-gnu/libc.so.6]
+945,271,425 (99.87%)  ./csu/../sysdeps/nptl/libc_start_call_main.h:(below main) [/usr/lib/x86_64-linux-gnu/libc.so.6]
+945,271,376 (99.87%)  /home/kahooso/Desktop/sokoban/tests/bench.c:main [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+600,328,711 (63.42%)  /home/kahooso/Desktop/sokoban/src/level.c:GenerateLevel [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+344,886,795 (36.44%)  /home/kahooso/Desktop/sokoban/src/solver.c:SolveLevel [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+320,411,674 (33.85%)  ./stdlib/./stdlib/rand.c:rand [/usr/lib/x86_64-linux-gnu/libc.so.6]
+293,123,868 (30.97%)  ./stdlib/./stdlib/random.c:random [/usr/lib/x86_64-linux-gnu/libc.so.6]
+184,039,523 (19.44%)  ./stdlib/./stdlib/random_r.c:random_r [/usr/lib/x86_64-linux-gnu/libc.so.6]
+120,298,812 (12.71%)  /home/kahooso/Desktop/sokoban/src/solver.c:Heuristic [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+ 64,554,369 ( 6.82%)  /home/kahooso/Desktop/sokoban/src/level.c:CarveMaze'2 [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+ 30,738,135 ( 3.25%)  /home/kahooso/Desktop/sokoban/src/solver.c:HashSetInsert [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+ 25,692,524 ( 2.71%)  /home/kahooso/Desktop/sokoban/src/solver.c:SortBoxes [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+  7,809,558 ( 0.83%)  /build/reproducible-path/glibc-2.43/string/../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S:__memcpy_avx_unaligned_erms [/usr/lib/x86_64-linux-gnu/libc.so.6]
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: /home/kahooso/Desktop/sokoban/tests/bench.c
+--------------------------------------------------------------------------------
+Ir          

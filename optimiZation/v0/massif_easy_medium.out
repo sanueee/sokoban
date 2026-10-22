@@ -1,0 +1,465 @@
+desc: --massif-out-file=/home/kahooso/Desktop/pl-course/labs/coursework/v0/massif_full.out
+cmd: ./sokoban_bench 3
+time_unit: i
+#-----------
+snapshot=0
+#-----------
+time=0
+mem_heap_B=0
+mem_heap_extra_B=0
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=1
+#-----------
+time=1348969
+mem_heap_B=40
+mem_heap_extra_B=16
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=2
+#-----------
+time=1349049
+mem_heap_B=120
+mem_heap_extra_B=48
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=3
+#-----------
+time=1364432
+mem_heap_B=592
+mem_heap_extra_B=64
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=4
+#-----------
+time=1365809
+mem_heap_B=4688
+mem_heap_extra_B=72
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=5
+#-----------
+time=4202592
+mem_heap_B=4704
+mem_heap_extra_B=80
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=6
+#-----------
+time=4203433
+mem_heap_B=20004704
+mem_heap_extra_B=792
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=7
+#-----------
+time=4203601
+mem_heap_B=22004752
+mem_heap_extra_B=816
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=8
+#-----------
+time=4203702
+mem_heap_B=46122000
+mem_heap_extra_B=4864
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=9
+#-----------
+time=5459940
+mem_heap_B=46122100
+mem_heap_extra_B=4884
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=10
+#-----------
+time=5462508
+mem_heap_B=46126196
+mem_heap_extra_B=4892
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=11
+#-----------
+time=5463551
+mem_heap_B=46126196
+mem_heap_extra_B=4892
+mem_stacks_B=0
+heap_tree=peak
+n5: 46126196 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 23068672 0x4001CAA: CreateHashSet (solver.c:402)
+  n1: 23068672 0x4001CAA: SolveLevel (solver.c:521)
+   n0: 23068672 0x400133B: main (bench.c:36)
+ n1: 20000000 0x4001BF6: CreateNodePool (solver.c:221)
+  n1: 20000000 0x4001BF6: SolveLevel (solver.c:519)
+   n0: 20000000 0x400133B: main (bench.c:36)
+ n1: 2000000 0x4001C53: CreateHeap (solver.c:270)
+  n1: 2000000 0x4001C53: SolveLevel (solver.c:520)
+   n0: 2000000 0x400133B: main (bench.c:36)
+ n1: 1048576 0x4001CC4: CreateHashSet (solver.c:403)
+  n1: 1048576 0x4001CC4: SolveLevel (solver.c:521)
+   n0: 1048576 0x400133B: main (bench.c:36)
+ n0: 8948 in 9 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=12
+#-----------
+time=5463729
+mem_heap_B=8884
+mem_heap_extra_B=100
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=13
+#-----------
+time=5469973
+mem_heap_B=8784
+mem_heap_extra_B=80
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=14
+#-----------
+time=8305547
+mem_heap_B=8800
+mem_heap_extra_B=88
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=15
+#-----------
+time=8305653
+mem_heap_B=20008816
+mem_heap_extra_B=808
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=16
+#-----------
+time=8305858
+mem_heap_B=46126096
+mem_heap_extra_B=4872
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=17
+#-----------
+time=9561119
+mem_heap_B=46126196
+mem_heap_extra_B=4892
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=18
+#-----------
+time=9562823
+mem_heap_B=26126196
+mem_heap_extra_B=4180
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=19
+#-----------
+time=9563001
+mem_heap_B=8884
+mem_heap_extra_B=100
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=20
+#-----------
+time=9566175
+mem_heap_B=8784
+mem_heap_extra_B=80
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=21
+#-----------
+time=12401749
+mem_heap_B=8800
+mem_heap_extra_B=88
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=22
+#-----------
+time=12401855
+mem_heap_B=20008816
+mem_heap_extra_B=808
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=23
+#-----------
+time=12402060
+mem_heap_B=46126096
+mem_heap_extra_B=4872
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=24
+#-----------
+time=13657321
+mem_heap_B=46126196
+mem_heap_extra_B=4892
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=25
+#-----------
+time=13659025
+mem_heap_B=26126196
+mem_heap_extra_B=4180
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=26
+#-----------
+time=13659203
+mem_heap_B=8884
+mem_heap_extra_B=100
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=27
+#-----------
+time=13662391
+mem_heap_B=8784
+mem_heap_extra_B=80
+mem_stacks_B=0
+heap_tree=detailed
+n3: 8784 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 8192 0x4AF11D0: _IO_file_doallocate (filedoalloc.c:91)
+  n1: 8192 0x4B00B22: _IO_doallocbuf (genops.c:373)
+   n1: 8192 0x4B00B22: _IO_doallocbuf (genops.c:368)
+    n1: 8192 0x4AFEA48: _IO_file_overflow@@GLIBC_2.2.5 (fileops.c:781)
+     n1: 8192 0x4AFF5BA: _IO_new_file_xsputn (fileops.c:1307)
+      n2: 8192 0x4AFF5BA: _IO_file_xsputn@@GLIBC_2.2.5 (fileops.c:1260)
+       n1: 4096 0x4ACD6B6: __printf_buffer_flush_to_file (printf_buffer_to_file.c:59)
+        n1: 4096 0x4ACD794: __printf_buffer_to_file_done (printf_buffer_to_file.c:120)
+         n1: 4096 0x4AD8418: __vfprintf_internal (vfprintf-internal.c:1549)
+          n1: 4096 0x4ACCE6A: printf (printf.c:33)
+           n1: 4096 0x4002348: SolveLevel (solver.c:683)
+            n0: 4096 0x400133B: main (bench.c:36)
+       n1: 4096 0x4AF28B4: fwrite (iofwrite.c:44)
+        n0: 4096 0x40011F4: main (bench.c:18)
+ n1: 472 0x4AF1D1A: __fopen_internal (iofopen.c:65)
+  n0: 472 0x40011CF: main (bench.c:15)
+ n0: 120 in 11 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=28
+#-----------
+time=261387635
+mem_heap_B=8800
+mem_heap_extra_B=88
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=29
+#-----------
+time=261387741
+mem_heap_B=20008816
+mem_heap_extra_B=808
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=30
+#-----------
+time=261387946
+mem_heap_B=46126096
+mem_heap_extra_B=4872
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=31
+#-----------
+time=262823218
+mem_heap_B=46126156
+mem_heap_extra_B=4884
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=32
+#-----------
+time=262824832
+mem_heap_B=26126156
+mem_heap_extra_B=4172
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=33
+#-----------
+time=262825010
+mem_heap_B=8844
+mem_heap_extra_B=92
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=34
+#-----------
+time=262829093
+mem_heap_B=8784
+mem_heap_extra_B=80
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=35
+#-----------
+time=510553457
+mem_heap_B=8800
+mem_heap_extra_B=88
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=36
+#-----------
+time=510553563
+mem_heap_B=20008816
+mem_heap_extra_B=808
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=37
+#-----------
+time=510553667
+mem_heap_B=22008848
+mem_heap_extra_B=824
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=38
+#-----------
+time=510553768
+mem_heap_B=46126096
+mem_heap_extra_B=4872
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=39
+#-----------
+time=511989040
+mem_heap_B=46126156
+mem_heap_extra_B=4884
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=40
+#-----------
+time=511990654
+mem_heap_B=26126156
+mem_heap_extra_B=4172
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=41
+#-----------
+time=511990832
+mem_heap_B=8844
+mem_heap_extra_B=92
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=42
+#-----------
+time=511994874
+mem_heap_B=8784
+mem_heap_extra_B=80
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=43
+#-----------
+time=525224129
+mem_heap_B=8800
+mem_heap_extra_B=88
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=44
+#-----------
+time=525224235
+mem_heap_B=20008816
+mem_heap_extra_B=808
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=45
+#-----------
+time=525224339
+mem_heap_B=22008848
+mem_heap_extra_B=824
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=46
+#-----------
+time=525224440
+mem_heap_B=46126096
+mem_heap_extra_B=4872
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=47
+#-----------
+time=531519256
+mem_heap_B=46126236
+mem_heap_extra_B=4884
+mem_stacks_B=0
+heap_tree=detailed
+n5: 46126236 (heap allocation functions) malloc/new/new[], --alloc-fns, etc.
+ n1: 23068672 0x4001CAA: CreateHashSet (solver.c:402)
+  n1: 23068672 0x4001CAA: SolveLevel (solver.c:521)
+   n0: 23068672 0x400133B: main (bench.c:36)
+ n1: 20000000 0x4001BF6: CreateNodePool (solver.c:221)
+  n1: 20000000 0x4001BF6: SolveLevel (solver.c:519)
+   n0: 20000000 0x400133B: main (bench.c:36)
+ n1: 2000000 0x4001C53: CreateHeap (solver.c:270)
+  n1: 2000000 0x4001C53: SolveLevel (solver.c:520)
+   n0: 2000000 0x400133B: main (bench.c:36)
+ n1: 1048576 0x4001CC4: CreateHashSet (solver.c:403)
+  n1: 1048576 0x4001CC4: SolveLevel (solver.c:521)
+   n0: 1048576 0x400133B: main (bench.c:36)
+ n0: 8988 in 9 places, all below massif's threshold (1.00%)
+#-----------
+snapshot=48
+#-----------
+time=531521040
+mem_heap_B=26126236
+mem_heap_extra_B=4172
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=49
+#-----------
+time=531521128
+mem_heap_B=24126204
+mem_heap_extra_B=4148
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=50
+#-----------
+time=531521218
+mem_heap_B=8924
+mem_heap_extra_B=92
+mem_stacks_B=0
+heap_tree=empty
+#-----------
+snapshot=51
+#-----------
+time=531525273
+mem_heap_B=8784
+mem_heap_extra_B=80
+mem_stacks_B=0
+heap_tree=empty

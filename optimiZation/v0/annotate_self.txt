@@ -1,0 +1,40 @@
+--------------------------------------------------------------------------------
+Profile data file 'cg_easy_medium.out' (creator: callgrind-3.27.1)
+--------------------------------------------------------------------------------
+I1 cache: 
+D1 cache: 
+LL cache: 
+Timerange: Basic block 0 - 200071110
+Trigger: dump easy_medium
+Profiled target:  ./sokoban_bench 3 (PID 82177, part 1)
+Events recorded:  Ir
+Events shown:     Ir
+Event sort order: Ir
+Thresholds:       99
+Include dirs:     
+User annotated:   
+Auto-annotation:  on
+
+--------------------------------------------------------------------------------
+Ir                   
+--------------------------------------------------------------------------------
+946,534,662 (100.0%)  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+Ir                    file:function
+--------------------------------------------------------------------------------
+276,334,071 (29.19%)  /home/kahooso/Desktop/sokoban/src/level.c:GenerateLevel [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+177,215,091 (18.72%)  ./stdlib/./stdlib/random_r.c:random_r [/usr/lib/x86_64-linux-gnu/libc.so.6]
+153,889,913 (16.26%)  /home/kahooso/Desktop/sokoban/src/solver.c:SolveLevel [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+120,298,812 (12.71%)  /home/kahooso/Desktop/sokoban/src/solver.c:Heuristic [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+109,151,225 (11.53%)  ./stdlib/./stdlib/random.c:random [/usr/lib/x86_64-linux-gnu/libc.so.6]
+ 30,738,135 ( 3.25%)  /home/kahooso/Desktop/sokoban/src/solver.c:HashSetInsert [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+ 27,287,806 ( 2.88%)  ./stdlib/./stdlib/rand.c:rand [/usr/lib/x86_64-linux-gnu/libc.so.6]
+ 25,692,524 ( 2.71%)  /home/kahooso/Desktop/sokoban/src/solver.c:SortBoxes [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+  7,809,558 ( 0.83%)  /build/reproducible-path/glibc-2.43/string/../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S:__memcpy_avx_unaligned_erms [/usr/lib/x86_64-linux-gnu/libc.so.6]
+  6,824,432 ( 0.72%)  ./stdlib/../string/bits/string_fortified.h:random_r
+  6,144,032 ( 0.65%)  /home/kahooso/Desktop/sokoban/src/solver.c:HeapPush [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: /home/kahooso/Desktop/sokoban/src/level.c
+--------------------------------------------------------------------------------

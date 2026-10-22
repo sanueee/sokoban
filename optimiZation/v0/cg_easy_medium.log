@@ -1,0 +1,8 @@
+[solver] iterations=25349  pool=26772  hash=26772  found=YES
+[easy] 1/3  [solver] iterations=568  pool=675  hash=675  found=YES
+[easy] 2/3  [solver] iterations=568  pool=675  hash=675  found=YES
+[easy] 3/3  
+[solver] iterations=69028  pool=77231  hash=77231  found=YES
+[medium] 1/3  [solver] iterations=19911  pool=22751  hash=22751  found=YES
+[medium] 2/3  [solver] iterations=19911  pool=22751  hash=22751  found=YES
+[medium] 3/3  

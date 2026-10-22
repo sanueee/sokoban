@@ -1,0 +1,20 @@
+==82177== Callgrind, a call-graph generating cache profiler
+==82177== Copyright (C) 2002-2017, and GNU GPL'd, by Josef Weidendorfer et al.
+==82177== Using Valgrind-3.27.1 and LibVEX; rerun with -h for copyright info
+==82177== Command: ./sokoban_bench 3
+==82177== 
+==82177== For interactive control, run 'callgrind_control -h'.
+==82177== brk segment overflow in thread #1: can't grow to 0x5377000
+==82177== (see section Limitations in user manual)
+==82177== NOTE: further instances of this message will not be shown
+==82177== 
+==82177== Process terminating with default action of signal 15 (SIGTERM)
+==82177==    at 0x4AA6811: random (random.c:305)
+==82177==    by 0x4AA65C8: rand (rand.c:27)
+==82177==    by 0x40034C4: GenerateLevel (level.c:187)
+==82177==    by 0x40012BB: main (bench.c:29)
+==82177== 
+==82177== Events    : Ir
+==82177== Collected : 1343666945
+==82177== 
+==82177== I   refs:      1,343,666,945

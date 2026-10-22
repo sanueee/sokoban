@@ -1,0 +1,1034 @@
+--------------------------------------------------------------------------------
+Profile data file 'cg_easy_medium.out' (creator: callgrind-3.27.1)
+--------------------------------------------------------------------------------
+I1 cache: 
+D1 cache: 
+LL cache: 
+Timerange: Basic block 0 - 200071110
+Trigger: dump easy_medium
+Profiled target:  ./sokoban_bench 3 (PID 82177, part 1)
+Events recorded:  Ir
+Events shown:     Ir
+Event sort order: Ir
+Thresholds:       99
+Include dirs:     
+User annotated:   
+Auto-annotation:  on
+
+--------------------------------------------------------------------------------
+Ir                   
+--------------------------------------------------------------------------------
+946,534,662 (100.0%)  PROGRAM TOTALS
+
+--------------------------------------------------------------------------------
+Ir                    file:function
+--------------------------------------------------------------------------------
+276,334,071 (29.19%)  /home/kahooso/Desktop/sokoban/src/level.c:GenerateLevel [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+177,215,091 (18.72%)  ./stdlib/./stdlib/random_r.c:random_r [/usr/lib/x86_64-linux-gnu/libc.so.6]
+153,889,913 (16.26%)  /home/kahooso/Desktop/sokoban/src/solver.c:SolveLevel [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+120,298,812 (12.71%)  /home/kahooso/Desktop/sokoban/src/solver.c:Heuristic [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+109,151,225 (11.53%)  ./stdlib/./stdlib/random.c:random [/usr/lib/x86_64-linux-gnu/libc.so.6]
+ 30,738,135 ( 3.25%)  /home/kahooso/Desktop/sokoban/src/solver.c:HashSetInsert [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+ 27,287,806 ( 2.88%)  ./stdlib/./stdlib/rand.c:rand [/usr/lib/x86_64-linux-gnu/libc.so.6]
+ 25,692,524 ( 2.71%)  /home/kahooso/Desktop/sokoban/src/solver.c:SortBoxes [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+  7,809,558 ( 0.83%)  /build/reproducible-path/glibc-2.43/string/../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S:__memcpy_avx_unaligned_erms [/usr/lib/x86_64-linux-gnu/libc.so.6]
+  6,824,432 ( 0.72%)  ./stdlib/../string/bits/string_fortified.h:random_r
+  6,144,032 ( 0.65%)  /home/kahooso/Desktop/sokoban/src/solver.c:HeapPush [/home/kahooso/Desktop/sokoban/build/sokoban_bench]
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: /home/kahooso/Desktop/sokoban/src/level.c
+--------------------------------------------------------------------------------
+Ir                  
+
+-- line 5 ----------------------------------------
+         .           #include <time.h>
+         .           #include <string.h>
+         .           
+         .           static const int DX[4] = {0, 0, -1, 1};
+         .           static const int DY[4] = {-1, 1, 0, 0};
+         .           
+         .           static int HasBox(Level *level, int x, int y)
+         .           { // check is box
+12,333,182 ( 1.30%)      for (int i = 0; i < level->num_boxes; i++)
+ 6,553,573 ( 0.69%)          if (level->boxes[i].x == x && level->boxes[i].y == y) return 1;
+         .               return 0;
+         .           }
+         .           
+         .           static void ShuffleDirs(int *dirs)
+         .           { // shuffle directions
+   277,015 ( 0.03%)      for (int i = 0; i < 4; i++)
+         .               {
+   456,260 ( 0.05%)          int r = rand() % 4;
+   127,546 ( 0.01%)  => ./stdlib/./stdlib/rand.c:rand (2,716x)
+    65,180 ( 0.01%)          int temp = dirs[i];
+   195,540 ( 0.02%)          dirs[i] = dirs[r];
+    65,180 ( 0.01%)          dirs[r] = temp;
+         .               }
+         .           }
+         .           
+         .           static void CarveMaze(Level *level, int x, int y)
+   162,950 ( 0.02%)  { // recursive Backtracker for corridors 1x1
+    65,180 ( 0.01%)      level->cells[y][x] = CELL_FLOOR;
+         .           
+    65,180 ( 0.01%)      int dirs[] = {0, 1, 2, 3};
+         .               ShuffleDirs(dirs);
+         .           
+   260,720 ( 0.03%)      for (int i = 0; i < 4; i++)
+         .               {
+   130,360 ( 0.01%)          int dx = DX[dirs[i]];
+    78,156 ( 0.01%)          int dy = DY[dirs[i]];
+         .           
+         .                   // cмотрим на 2 клетки вперед, чтобы оставлять стены между коридорами
+    65,180 ( 0.01%)          int nx = x + dx * 2;
+    61,861 ( 0.01%)          int ny = y + dy * 2;
+         .           
+         .                   // если клетка в пределах карты и всё ещё стена — копаем к ней
+   715,772 ( 0.08%)          if (nx > 0 && nx < level->width - 1 && ny > 0 && ny < level->height - 1)
+         .                   {
+   311,400 ( 0.03%)              if (level->cells[ny][nx] == CELL_WALL)
+         .                       {
+         .                           // ломаем стену между нами и целью
+   140,544 ( 0.01%)                  level->cells[y + dy][x + dx] = CELL_FLOOR;
+         .                           // рекурсивно идем дальше
+    78,080 ( 0.01%)                  CarveMaze(level, nx, ny);
+ 6,103,475 ( 0.64%)  => /home/kahooso/Desktop/sokoban/src/level.c:CarveMaze'2 (679x)
+         .                       }
+         .                   }
+         .               }
+   114,065 ( 0.01%)  }
+         .           
+         .           static void GenerateMaze(Level *const level)
+         .           { // generating map
+         .           
+         .               // вырезаем лабиринт. обязательно начинаем с нечетных координат
+         .               // иначе коридоры могут "прилипнуть" к краю карты
+     6,790 ( 0.00%)      int startX = 1 + (rand() % ((level->width - 2) / 2)) * 2;
+    31,885 ( 0.00%)  => ./stdlib/./stdlib/rand.c:rand (679x)
+     6,790 ( 0.00%)      int startY = 1 + (rand() % ((level->height - 2) / 2)) * 2;
+    31,901 ( 0.00%)  => ./stdlib/./stdlib/rand.c:rand (679x)
+     2,037 ( 0.00%)      CarveMaze(level, startX, startY);
+ 6,369,978 ( 0.67%)  => /home/kahooso/Desktop/sokoban/src/level.c:CarveMaze (679x)
+         .           
+         .               // создаем "комнаты" и циклы
+         .               // ломаем немного случайных стен, чтобы появились открытые пространства и обходные пути
+         .               // количество сломанных стен зависит от размера карты (около 10% площади)
+     5,432 ( 0.00%)      int extra_spaces = (level->width * level->height) / 10;
+         .           
+    27,279 ( 0.00%)      for (int i = 0; i < extra_spaces; i++)
+         .               {
+    58,898 ( 0.01%)          int rx = 1 + rand() % (level->width - 2);
+   395,217 ( 0.04%)  => ./stdlib/./stdlib/rand.c:rand (8,414x)
+    58,898 ( 0.01%)          int ry = 1 + rand() % (level->height - 2);
+   395,177 ( 0.04%)  => ./stdlib/./stdlib/rand.c:rand (8,414x)
+         .           
+    50,484 ( 0.01%)          if (level->cells[ry][rx] == CELL_WALL)
+         .                   {
+     3,598 ( 0.00%)              level->cells[ry][rx] = CELL_FLOOR;
+         .                   }
+         .               }
+         .           }
+         .           
+         .           static void FloodFillWithBoxes(Level *level, int startX, int startY, int visited[MAX_FIELD][MAX_FIELD])
+         .           { // checks for passability
+         .               typedef struct { int x, y; } Point;
+         .               Point stack[MAX_FIELD * MAX_FIELD];
+         .               int top = 0;
+         .           
+    74,254 ( 0.01%)      stack[top++] = (Point){startX, startY};
+   148,508 ( 0.02%)      visited[startY][startX] = 1;
+         .           
+ 1,011,579 ( 0.11%)      while (top > 0)
+         .               {
+ 2,737,721 ( 0.29%)          Point p = stack[--top];
+ 5,960,615 ( 0.63%)          for (int d = 0; d < 4; d++)
+         .                   {
+         .                       int nx = p.x + DX[d];
+ 3,897,815 ( 0.41%)              int ny = p.y + DY[d];
+17,577,263 ( 1.86%)              if (nx < 0 || nx >= level->width || ny < 0 || ny >= level->height) continue;
+23,905,355 ( 2.53%)              if (visited[ny][nx] || level->cells[ny][nx] == CELL_WALL || HasBox(level, nx, ny)) continue;
+         .           
+   900,198 ( 0.10%)              visited[ny][nx] = 1;
+ 1,800,396 ( 0.19%)              stack[top++] = (Point){nx, ny};
+         .                   }
+         .               }
+         .           }
+         .           
+         .           static int IsCornerDeadlock(Level *const level, int x, int y)
+     6,300 ( 0.00%)  { // is corner deadlock
+    25,200 ( 0.00%)      int wall_up    = (level->cells[y - 1][x] == CELL_WALL);
+    44,100 ( 0.00%)      int wall_down  = (level->cells[y + 1][x] == CELL_WALL);
+    50,400 ( 0.01%)      int wall_left  = (level->cells[y][x - 1] == CELL_WALL);
+    31,500 ( 0.00%)      int wall_right = (level->cells[y][x + 1] == CELL_WALL);
+         .           
+    12,600 ( 0.00%)      return (wall_up && wall_left)  || (wall_up && wall_right) ||
+    25,200 ( 0.00%)             (wall_down && wall_left)|| (wall_down && wall_right);
+     6,300 ( 0.00%)  }
+         .           
+         .           static int IsDeadlock(Level *const level, Position box)
+         .           { // is deadlock
+       125 ( 0.00%)      if (IsCornerDeadlock(level, box.x, box.y)) return 1;
+       800 ( 0.00%)  => /home/kahooso/Desktop/sokoban/src/level.c:IsCornerDeadlock (25x)
+         .           
+         .               // Проверка 2x2 блоков (стены + ящики), которые невозможно сдвинуть
+         .               int x = box.x, y = box.y;
+       243 ( 0.00%)      int up = HasBox(level, x, y-1) || level->cells[y-1][x] == CELL_WALL;
+       267 ( 0.00%)      int down = HasBox(level, x, y+1) || level->cells[y+1][x] == CELL_WALL;
+       316 ( 0.00%)      int left = HasBox(level, x-1, y) || level->cells[y][x-1] == CELL_WALL;
+       244 ( 0.00%)      int right = HasBox(level, x+1, y) || level->cells[y][x+1] == CELL_WALL;
+         .           
+       250 ( 0.00%)      int ul = HasBox(level, x-1, y-1) || level->cells[y-1][x-1] == CELL_WALL;
+       218 ( 0.00%)      int ur = HasBox(level, x+1, y-1) || level->cells[y-1][x+1] == CELL_WALL;
+       243 ( 0.00%)      int dl = HasBox(level, x-1, y+1) || level->cells[y+1][x-1] == CELL_WALL;
+       175 ( 0.00%)      int dr = HasBox(level, x+1, y+1) || level->cells[y+1][x+1] == CELL_WALL;
+         .           
+        53 ( 0.00%)      if (up && left && ul) return 1;
+        50 ( 0.00%)      if (up && right && ur) return 1;
+        75 ( 0.00%)      if (down && left && dl) return 1;
+        48 ( 0.00%)      if (down && right && dr) return 1;
+         .           
+         .               return 0;
+         .           }
+         .           
+         .           static int PlaceGoalsAndBoxes(Level *const level)
+         .           { // places goals and boxes
+       679 ( 0.00%)      int placed = 0;
+       679 ( 0.00%)      int attempts = 0;
+    62,135 ( 0.01%)      while (placed < level->num_boxes && attempts < 1000)
+         .               {
+    11,748 ( 0.00%)          attempts++;
+    82,236 ( 0.01%)          int x = 2 + rand() % (level->width - 4);
+   551,755 ( 0.06%)  => ./stdlib/./stdlib/rand.c:rand (11,748x)
+    82,236 ( 0.01%)          int y = 2 + rand() % (level->height - 4);
+   551,792 ( 0.06%)  => ./stdlib/./stdlib/rand.c:rand (11,748x)
+         .           
+    82,236 ( 0.01%)          if (level->cells[y][x] != CELL_FLOOR) continue;
+         .           
+    37,650 ( 0.00%)          if (IsCornerDeadlock(level, x, y)) continue;
+   200,800 ( 0.02%)  => /home/kahooso/Desktop/sokoban/src/level.c:IsCornerDeadlock (6,275x)
+         .           
+         .                   int too_close = 0;
+    54,843 ( 0.01%)          for (int i = 0; i < placed; i++)
+         .                   {
+   137,761 ( 0.01%)              if (abs(x - level->goals[i].x) + abs(y - level->goals[i].y) < 2)
+         .                       {
+         .                           too_close = 1; break;
+         .                       }
+         .                   }
+         .                   if (too_close) continue;
+         .           
+    10,521 ( 0.00%)          level->goals[placed] = (Position){x, y};
+     7,014 ( 0.00%)          level->boxes[placed] = (Position){x, y};
+     3,507 ( 0.00%)          placed++;
+         .               }
+         .               return placed == level->num_boxes;
+         .           }
+         .           
+         .           static void ReverseSolve(Level *level, int target_moves)
+         .           { // algorithm for checking solving
+   112,736 ( 0.01%)      for (int i = 0; i < target_moves; i++)
+         .               {
+ 7,611,035 ( 0.80%)          int visited[MAX_FIELD][MAX_FIELD] = {0};
+   182,240 ( 0.02%)          FloodFillWithBoxes(level, level->player.x, level->player.y, visited);
+         .           
+         .                   int moved = 0;
+ 6,846,991 ( 0.72%)          for (int attempts = 0; attempts < 100 && !moved; attempts++)
+         .                   {
+13,421,426 ( 1.42%)              int box_idx = rand() % level->num_boxes;
+157,593,517 (16.65%)  => ./stdlib/./stdlib/rand.c:rand (3,355,357x)
+26,842,848 ( 2.84%)              int dir = rand() % 4;
+157,593,500 (16.65%)  => ./stdlib/./stdlib/rand.c:rand (3,355,356x)
+         .           
+ 6,710,712 ( 0.71%)              int bx = level->boxes[box_idx].x;
+         .                       int by = level->boxes[box_idx].y;
+         .           
+         .                       // направление, куда мы тянем ящик.
+         .                       // значит, игрок должен стоять со стороны box - dir (pull_x, pull_y)
+         .                       // и отступать на шаг назад в box - 2*dir (back_x, back_y)
+10,066,068 ( 1.06%)              int dx = DX[dir], dy = DY[dir];
+13,421,424 ( 1.42%)              int pull_x = bx - dx; int pull_y = by - dy;
+13,421,424 ( 1.42%)              int back_x = bx - 2 * dx; int back_y = by - 2 * dy;
+         .           
+         .                       // может ли игрок подойти к ящику для тяги
+40,300,720 ( 4.26%)              if (pull_x <= 0 || pull_x >= level->width - 1 || pull_y <= 0 || pull_y >= level->height - 1) continue;
+23,487,492 ( 2.48%)              if (!visited[pull_y][pull_x]) continue;
+         .           
+         .                       // есть ли место куда отступить
+34,181,592 ( 3.61%)              if (back_x <= 0 || back_x >= level->width - 1 || back_y <= 0 || back_y >= level->height - 1) continue;
+ 1,549,242 ( 0.16%)              if (level->cells[back_y][back_x] == CELL_WALL) continue;
+         .                       if (HasBox(level, back_x, back_y)) continue;
+         .           
+     8,152 ( 0.00%)              level->boxes[box_idx].x = pull_x;
+     4,076 ( 0.00%)              level->boxes[box_idx].y = pull_y;
+     4,076 ( 0.00%)              level->player.x = back_x;
+     4,076 ( 0.00%)              level->player.y = back_y;
+         .                       moved = 1;
+         .                   }
+         .               }
+         .           }
+         .           
+         .           static int IsOnGoal(Level *level, Position box)
+         .           { // is on goal
+    33,134 ( 0.00%)      for (int i = 0; i < level->num_boxes; i++)
+    34,916 ( 0.00%)          if (level->goals[i].x == box.x && level->goals[i].y == box.y) return 1;
+         .               return 0;
+         .           }
+         .           
+         .           static int HasDeadlock(Level *level)
+         .           { // checks for deadlocs (returns 1 if is)
+        81 ( 0.00%)      for (int i = 0; i < level->num_boxes; i++)
+         .               {
+        50 ( 0.00%)          if (IsOnGoal(level, level->boxes[i])) continue;
+         .                   if (IsDeadlock(level, level->boxes[i])) return 1;
+         .               }
+         .               return 0;
+         .           }
+         .           
+         .           Level GenerateLevel(Difficulty difficulty)
+        70 ( 0.00%)  {
+        42 ( 0.00%)      srand(time(NULL));
+    72,002 ( 0.01%)  => ./stdlib/./stdlib/random.c:srand (7x)
+        35 ( 0.00%)  => ./time/../sysdeps/unix/sysv/linux/time.c:time_syscall (7x)
+     1,715 ( 0.00%)      Level level = {0};
+         7 ( 0.00%)      level.difficulty = difficulty;
+         .               level.undo_head = NULL;
+         .               level.undo_count = 0;
+         .            
+         .               int valid = 0;
+         7 ( 0.00%)      while (!valid)
+         .               {
+     2,605 ( 0.00%)          switch (difficulty) {
+         .                       case DIFF_EASY:
+     1,908 ( 0.00%)                  level.width = 9 + rand() % 3;
+     6,369 ( 0.00%)  => ./stdlib/./stdlib/rand.c:rand (136x)
+       706 ( 0.00%)  => /build/reproducible-path/glibc-2.43/elf/../sysdeps/x86_64/dl-trampoline.h:_dl_runtime_resolve_xsave (1x)
+     1,904 ( 0.00%)                  level.height = 9 + rand() % 3;
+     6,379 ( 0.00%)  => ./stdlib/./stdlib/rand.c:rand (136x)
+     1,224 ( 0.00%)                  level.num_boxes = 3 + rand() % 2;
+     6,374 ( 0.00%)  => ./stdlib/./stdlib/rand.c:rand (136x)
+         .                           break;
+         .                       case DIFF_MEDIUM:
+     4,779 ( 0.00%)                  level.width = 11 + rand() % 2;
+    24,948 ( 0.00%)  => ./stdlib/./stdlib/rand.c:rand (531x)
+     4,779 ( 0.00%)                  level.height = 11 + rand() % 2;
+    24,942 ( 0.00%)  => ./stdlib/./stdlib/rand.c:rand (531x)
+     4,779 ( 0.00%)                  level.num_boxes = 5 + rand() % 2;
+    24,923 ( 0.00%)  => ./stdlib/./stdlib/rand.c:rand (531x)
+       531 ( 0.00%)                  break;
+         .                       case DIFF_HARD:
+       108 ( 0.00%)                  level.width = 13 + rand() % 2;
+       566 ( 0.00%)  => ./stdlib/./stdlib/rand.c:rand (12x)
+       108 ( 0.00%)                  level.height = 13 + rand() % 2;
+       564 ( 0.00%)  => ./stdlib/./stdlib/rand.c:rand (12x)
+       108 ( 0.00%)                  level.num_boxes = 7 + rand() % 2;
+       564 ( 0.00%)  => ./stdlib/./stdlib/rand.c:rand (12x)
+        12 ( 0.00%)                  break;
+         .                   }
+         .            
+    32,529 ( 0.00%)          for (size_t i = 0; i < level.height; i++)
+   179,657 ( 0.02%)              for (size_t j = 0; j < level.width; j++)
+    85,784 ( 0.01%)                  level.cells[i][j] = CELL_WALL;
+         .            
+         .                   GenerateMaze(&level);
+         .            
+     3,395 ( 0.00%)          if (!PlaceGoalsAndBoxes(&level)) continue;
+         .            
+         .                   int player_placed = 0;
+       982 ( 0.00%)          for (int a = 0; a < 500 && !player_placed; a++) {
+     8,190 ( 0.00%)              int px = 1 + rand() % (level.width - 2);
+    54,956 ( 0.01%)  => ./stdlib/./stdlib/rand.c:rand (1,170x)
+     8,190 ( 0.00%)              int py = 1 + rand() % (level.height - 2);
+    54,990 ( 0.01%)  => ./stdlib/./stdlib/rand.c:rand (1,170x)
+     8,190 ( 0.00%)              if (level.cells[py][px] == CELL_FLOOR && !HasBox(&level, px, py))
+         .                       {
+     1,358 ( 0.00%)                  level.player.x = px; level.player.y = py;
+         .                           player_placed = 1;
+         .                       }
+         .                   }
+         .                   if (!player_placed) continue;
+         .            
+     5,024 ( 0.00%)          int target_moves = (difficulty == DIFF_EASY) ? 30 : (difficulty == DIFF_MEDIUM ? 60 : 100);
+         .                   ReverseSolve(&level, target_moves);
+         .            
+         .                   int boxes_on_goals = 0;
+    22,924 ( 0.00%)          for (int i = 0; i < level.num_boxes; i++)
+         .                   {
+     9,470 ( 0.00%)              if (IsOnGoal(&level, level.boxes[i])) boxes_on_goals++;
+         .                   }
+     1,380 ( 0.00%)          if (boxes_on_goals > 0) continue;
+         .            
+         .                   if (HasDeadlock(&level)) continue;
+         .            
+        12 ( 0.00%)          level.initial_state.player = level.player;
+        60 ( 0.00%)          memcpy(level.initial_state.boxes, level.boxes, sizeof(level.boxes));
+         6 ( 0.00%)          level.initial_state.step_count = 0;
+         .            
+         .                   valid = 1;
+         .               }
+         .            
+     1,452 ( 0.00%)      return level;
+        54 ( 0.00%)  }
+         .            
+         .           void RestartLevel(Level *level)
+         .           {
+         .               FreeUndoStack(level);
+         .               level->player = level->initial_state.player;
+         .               level->step_count = 0;
+         .               level->time_elapsed = 0;
+         .               memcpy(level->boxes, level->initial_state.boxes, sizeof(level->boxes));
+-- line 311 ----------------------------------------
+
+--------------------------------------------------------------------------------
+-- Auto-annotated source: /home/kahooso/Desktop/sokoban/src/solver.c
+--------------------------------------------------------------------------------
+Ir                  
+
+-- line 52 ----------------------------------------
+         .           
+         .           /*
+         .            * SortBoxes — сортировка массива позиций ящиков вставками.
+         .            * Порядок позиций не важен для игры, но важен для сравнения состояний:
+         .            * одни и те же ящики всегда дают одинаковую PackedState независимо от
+         .            * порядка их толчков.
+         .            */
+         .           static void SortBoxes(uint16_t *boxes, int n)
+   924,954 ( 0.10%)  {
+ 6,630,306 ( 0.70%)      for (int i = 1; i < n; i++)
+         .               {
+ 1,272,179 ( 0.13%)          uint16_t key = boxes[i];
+ 6,360,895 ( 0.67%)          int j = i - 1;
+ 3,833,307 ( 0.40%)          while (j >= 0 && boxes[j] > key)
+         .                   {
+     3,187 ( 0.00%)              boxes[j + 1] = boxes[j];
+     3,187 ( 0.00%)              j--;
+         .                   }
+ 6,356,191 ( 0.67%)          boxes[j + 1] = key;
+         .               }
+   308,318 ( 0.03%)  }
+         .           
+         .           /*
+         .            * IsBoxAt — линейный поиск ящика по позиции pos.
+         .            * Возвращает индекс в массиве boxes или -1, если ящика нет.
+         .            * (Количество ящиков мало — до MAX_BOXES=10 — поэтому O(n) достаточно.)
+         .            */
+         .           static int IsBoxAt(const uint16_t *boxes, int n, uint16_t pos)
+         .           {
+22,990,197 ( 2.43%)      for (int i = 0; i < n; i++)
+ 9,714,002 ( 1.03%)          if (boxes[i] == pos) return i;
+         .               return -1;
+         .           }
+         .           
+         .           /*
+         .            * IsGoal — проверяет, является ли позиция pos одной из целевых клеток.
+         .            */
+         .           static int IsGoal(const uint16_t *goals, int n, uint16_t pos)
+         .           {
+ 6,053,739 ( 0.64%)      for (int i = 0; i < n; i++)
+ 2,572,720 ( 0.27%)          if (goals[i] == pos) return 1;
+         .               return 0;
+         .           }
+         .           
+         .           /* ---------- Эвристика A* ---------- */
+         .           
+         .           /*
+         .            * Heuristic — нижняя оценка оставшейся стоимости пути (h(n)).
+         .            *
+-- line 100 ----------------------------------------
+-- line 103 ----------------------------------------
+         .            * быть меньше этой суммы, поэтому A* гарантированно найдёт кратчайший
+         .            * путь.
+         .            *
+         .            * Недостаток: не учитывает конкуренцию ящиков за одну цель. Для Sokoban
+         .            * это может привести к тому, что несколько ящиков «претендуют» на одну
+         .            * ближайшую цель — эвристика занижена, но остаётся допустимой.
+         .            */
+         .           static int Heuristic(const uint16_t *boxes, const uint16_t *goals, int n)
+ 1,357,695 ( 0.14%)  {
+   452,565 ( 0.05%)      int h = 0;
+ 3,230,916 ( 0.34%)      for (int i = 0; i < n; i++)
+         .               {
+ 6,202,096 ( 0.66%)          int bx = boxes[i] % MAX_FIELD;
+ 1,550,524 ( 0.16%)          int by = boxes[i] / MAX_FIELD;
+   775,262 ( 0.08%)          int best = INT_MAX;
+13,288,154 ( 1.40%)          for (int j = 0; j < n; j++)
+         .                   {
+33,367,712 ( 3.53%)              int gx = goals[j] % MAX_FIELD;
+ 4,170,964 ( 0.44%)              int gy = goals[j] / MAX_FIELD;
+45,880,604 ( 4.85%)              int dist = abs(bx - gx) + abs(by - gy);
+ 8,341,928 ( 0.88%)              if (dist < best) best = dist;
+         .                   }
+   775,262 ( 0.08%)          h += best;
+         .               }
+         .               return h;
+   905,130 ( 0.10%)  }
+         .           
+         .           /* ---------- Обнаружение дедлоков ---------- */
+         .           
+         .           /*
+         .            * IsDeadState — проверяет, является ли расстановка ящиков тупиковой
+         .            * (дедлоком), то есть состоянием, из которого решение уже невозможно.
+         .            *
+         .            * Реализованы два вида дедлоков:
+-- line 136 ----------------------------------------
+-- line 147 ----------------------------------------
+         .            * Проверка выполняется только для ящиков не на цели — ящик на цели не
+         .            * создаёт дедлок даже в углу.
+         .            *
+         .            * Эти проверки значительно сокращают дерево поиска, отсекая заведомо
+         .            * проигрышные ветки.
+         .            */
+         .           static int IsDeadState(const Level *level, const uint16_t *boxes, int nb, const uint16_t *goals)
+         .           {
+   505,170 ( 0.05%)      for (int i = 0; i < nb; i++)
+         .               {
+   210,096 ( 0.02%)          if (IsGoal(goals, nb, boxes[i])) continue; // ящик уже на цели — пропускаем
+         .           
+   603,820 ( 0.06%)          int x = boxes[i] % MAX_FIELD;
+    86,260 ( 0.01%)          int y = boxes[i] / MAX_FIELD;
+         .           
+         .                   // 1) Угловой дедлок: две смежные стены вокруг ящика
+   431,300 ( 0.05%)          int w_up    = (level->cells[y - 1][x] == CELL_WALL);
+   332,372 ( 0.04%)          int w_down  = (level->cells[y + 1][x] == CELL_WALL);
+   690,080 ( 0.07%)          int w_left  = (level->cells[y][x - 1] == CELL_WALL);
+   517,560 ( 0.05%)          int w_right = (level->cells[y][x + 1] == CELL_WALL);
+         .           
+   229,672 ( 0.02%)          if ((w_up && w_left) || (w_up && w_right) ||
+   217,612 ( 0.02%)              (w_down && w_left) || (w_down && w_right))
+         .                       return 1;
+         .           
+         .                   // 2) Дедлок 2×2: проверяем все четыре квадрата, в которых участвует
+         .                   //    текущий ящик (ящик может быть в любом из четырёх углов квадрата)
+   393,433 ( 0.04%)          int offsets[4][2] = {{0,0}, {-1,0}, {0,-1}, {-1,-1}};
+ 1,046,479 ( 0.11%)          for (int q = 0; q < 4; q++)
+         .                   {
+         .                       int bx = x + offsets[q][0]; // левый верхний угол квадрата
+   647,160 ( 0.07%)              int by = y + offsets[q][1];
+ 3,559,380 ( 0.38%)              if (bx < 0 || bx + 1 >= level->width || by < 0 || by + 1 >= level->height)
+         .                           continue;
+         .           
+         .                       // Четыре клетки квадрата
+   647,160 ( 0.07%)              uint16_t cells[4] = {
+   647,160 ( 0.07%)                  (uint16_t)(by       * MAX_FIELD + bx),
+   647,160 ( 0.07%)                  (uint16_t)(by       * MAX_FIELD + bx + 1),
+   970,740 ( 0.10%)                  (uint16_t)((by + 1) * MAX_FIELD + bx),
+   647,160 ( 0.07%)                  (uint16_t)((by + 1) * MAX_FIELD + bx + 1)
+         .                       };
+         .           
+   647,160 ( 0.07%)              int all_blocked = 1, any_box_off_goal = 0;
+   941,499 ( 0.10%)              for (int c = 0; c < 4; c++)
+         .                       {
+ 4,234,710 ( 0.45%)                  int cx = cells[c] % MAX_FIELD;
+         .                           int cy = cells[c] / MAX_FIELD;
+ 1,975,224 ( 0.21%)                  int is_wall = (level->cells[cy][cx] == CELL_WALL);
+         .                           int is_box  = (IsBoxAt(boxes, nb, cells[c]) != -1);
+         .           
+   987,612 ( 0.10%)                  if (!is_wall && !is_box) { all_blocked = 0; break; } // есть свободная клетка — не дедлок
+         .                           if (is_box && !IsGoal(goals, nb, cells[c]))
+         .                               any_box_off_goal = 1; // ящик вне цели в этом квадрате
+         .                       }
+   160,221 ( 0.02%)              if (all_blocked && any_box_off_goal) return 1; // дедлок 2×2
+         .                   }
+         .               }
+         .               return 0;
+         .           }
+         .           
+         .           /* ---------- NodePool — пул узлов A* ---------- */
+         .           
+         .           /*
+-- line 210 ----------------------------------------
+-- line 211 ----------------------------------------
+         .            * Все узлы хранятся в одном динамическом массиве (NodePool).
+         .            * Узел адресуется целочисленным индексом — это безопаснее указателей,
+         .            * так как realloc может переместить блок памяти.
+         .            * Поле parent в AStarNode — тоже индекс, а не указатель.
+         .            */
+         .           
+         .           static NodePool *CreateNodePool(int cap)
+         .           {
+        34 ( 0.00%)      NodePool *p = (NodePool *)calloc(1, sizeof(NodePool));
+       440 ( 0.00%)  => ./malloc/./malloc/malloc.c:calloc (6x)
+       717 ( 0.00%)  => /build/reproducible-path/glibc-2.43/elf/../sysdeps/x86_64/dl-trampoline.h:_dl_runtime_resolve_xsave (1x)
+        24 ( 0.00%)      if (!p) return NULL;
+        34 ( 0.00%)      p->data = (AStarNode *)malloc(sizeof(AStarNode) * cap);
+     3,083 ( 0.00%)  => ./malloc/./malloc/malloc.c:malloc (6x)
+       750 ( 0.00%)  => /build/reproducible-path/glibc-2.43/elf/../sysdeps/x86_64/dl-trampoline.h:_dl_runtime_resolve_xsave (1x)
+        24 ( 0.00%)      if (!p->data) { free(p); return NULL; }
+        12 ( 0.00%)      p->capacity = cap;
+         .               return p;
+         .           }
+         .           
+         .           static void FreeNodePool(NodePool *p)
+         .           {
+         .               if (!p) return;
+        28 ( 0.00%)      free(p->data);
+       926 ( 0.00%)  => ./malloc/./malloc/malloc.c:free (6x)
+       749 ( 0.00%)  => /build/reproducible-path/glibc-2.43/elf/../sysdeps/x86_64/dl-trampoline.h:_dl_runtime_resolve_xsave (1x)
+        18 ( 0.00%)      free(p);
+       512 ( 0.00%)  => ./malloc/./malloc/malloc.c:free (6x)
+         .           }
+         .           
+         .           /*
+         .            * PoolAdd — добавляет узел в пул, при необходимости удваивая ёмкость.
+         .            * Возвращает индекс нового узла или -1 при ошибке.
+         .            *
+         .            * ВАЖНО: после PoolAdd адрес pool->data может измениться из-за realloc.
+         .            * Поэтому перед вызовом PoolAdd нужно скопировать все нужные данные
+         .            * из pool->data на стек (как это делается в главном цикле).
+         .            */
+         .           static int PoolAdd(NodePool *p, const AStarNode *node)
+         .           {
+ 1,055,985 ( 0.11%)      if (p->count >= p->capacity)
+         .               {
+         .                   if (p->capacity >= NODES_MAX_CAP) return -1;
+         .                   int new_cap = p->capacity * 2;
+         .                   if (new_cap > NODES_MAX_CAP) new_cap = NODES_MAX_CAP;
+   150,855 ( 0.02%)          AStarNode *tmp = (AStarNode *)realloc(p->data, sizeof(AStarNode) * new_cap);
+         .                   if (!tmp) return -1;
+         .                   p->data = tmp;
+         .                   p->capacity = new_cap;
+         .               }
+ 4,072,971 ( 0.43%)      p->data[p->count] = *node;
+   452,565 ( 0.05%)      return p->count++;
+         .           }
+         .           
+         .           /* ---------- MinHeap — приоритетная очередь (open list) ---------- */
+         .           
+         .           /*
+         .            * Бинарная куча хранит индексы узлов из NodePool, упорядоченные по f.
+         .            * HeapPop всегда возвращает узел с наименьшим f — следующий кандидат
+         .            * для раскрытия в A*.
+         .            */
+         .           
+         .           static MinHeap *CreateHeap(int cap)
+         .           {
+        48 ( 0.00%)      MinHeap *h = (MinHeap *)calloc(1, sizeof(MinHeap));
+       440 ( 0.00%)  => ./malloc/./malloc/malloc.c:calloc (6x)
+        24 ( 0.00%)      if (!h) return NULL;
+        30 ( 0.00%)      h->idx = (int *)malloc(sizeof(int) * cap);
+     1,964 ( 0.00%)  => ./malloc/./malloc/malloc.c:malloc (6x)
+        18 ( 0.00%)      if (!h->idx) { free(h); return NULL; }
+         6 ( 0.00%)      h->capacity = cap;
+         .               return h;
+         .           }
+         .           
+         .           static void FreeHeap(MinHeap *h)
+         .           {
+         .               if (!h) return;
+        24 ( 0.00%)      free(h->idx);
+       918 ( 0.00%)  => ./malloc/./malloc/malloc.c:free (6x)
+        18 ( 0.00%)      free(h);
+       192 ( 0.00%)  => ./malloc/./malloc/malloc.c:free (6x)
+         .           }
+         .           
+         .           /*
+         .            * HeapSiftUp — восстанавливает свойство кучи снизу вверх после вставки.
+         .            * Новый элемент в позиции pos «всплывает» к корню, пока его f < f родителя.
+         .            */
+         .           static void HeapSiftUp(MinHeap *h, const NodePool *pool, int pos)
+         .           {
+   345,082 ( 0.04%)      while (pos > 0)
+         .               {
+   517,533 ( 0.05%)          int parent = (pos - 1) / 2;
+ 2,371,814 ( 0.25%)          if (pool->data[h->idx[parent]].f <= pool->data[h->idx[pos]].f) break;
+         .                   int tmp = h->idx[parent];
+    21,686 ( 0.00%)          h->idx[parent] = h->idx[pos];
+    21,686 ( 0.00%)          h->idx[pos] = tmp;
+         .                   pos = parent;
+         .               }
+         .           }
+         .           
+         .           /*
+         .            * HeapSiftDown — восстанавливает свойство кучи сверху вниз после извлечения
+         .            * минимума. Корень заменяется последним элементом, затем «тонет» вниз.
+         .            */
+         .           static void HeapSiftDown(MinHeap *h, const NodePool *pool, int pos)
+         .           {
+         .               while (1)
+         .               {
+         .                   int best = pos;
+ 2,627,114 ( 0.28%)          int left = 2 * pos + 1;
+ 1,313,557 ( 0.14%)          int right = 2 * pos + 2;
+17,102,692 ( 1.81%)          if (left < h->size && pool->data[h->idx[left]].f < pool->data[h->idx[best]].f)
+         .                       best = left;
+10,792,747 ( 1.14%)          if (right < h->size && pool->data[h->idx[right]].f < pool->data[h->idx[best]].f)
+         .                       best = right;
+ 2,356,460 ( 0.25%)          if (best == pos) break;
+ 2,356,460 ( 0.25%)          int tmp = h->idx[pos];
+ 3,534,690 ( 0.37%)          h->idx[pos] = h->idx[best];
+ 1,178,230 ( 0.12%)          h->idx[best] = tmp;
+ 1,178,230 ( 0.12%)          pos = best;
+         .               }
+         .           }
+         .           
+         .           /* HeapPush — добавляет индекс узла в очередь и восстанавливает порядок. */
+         .           static int HeapPush(MinHeap *h, const NodePool *pool, int node_idx)
+   754,275 ( 0.08%)  {
+   603,420 ( 0.06%)      if (h->size >= h->capacity)
+         .               {
+         .                   int new_cap = h->capacity * 2;
+   150,855 ( 0.02%)          int *tmp = (int *)realloc(h->idx, sizeof(int) * new_cap);
+         .                   if (!tmp) return 0;
+         .                   h->idx = tmp;
+         .                   h->capacity = new_cap;
+         .               }
+   150,855 ( 0.02%)      h->idx[h->size] = node_idx;
+   150,855 ( 0.02%)      HeapSiftUp(h, pool, h->size);
+   452,551 ( 0.05%)      h->size++;
+   150,855 ( 0.02%)      return 1;
+   452,565 ( 0.05%)  }
+         .           
+         .           /*
+         .            * HeapPop — извлекает индекс узла с наименьшим f.
+         .            * Корень (минимум) сохраняется, на его место ставится последний элемент,
+         .            * затем выполняется sift-down.
+         .            */
+         .           static int HeapPop(MinHeap *h, const NodePool *pool)
+         .           {
+         .               if (h->size <= 0) return -1;
+   541,340 ( 0.06%)      int result = h->idx[0];
+   270,670 ( 0.03%)      h->size--;
+   135,335 ( 0.01%)      if (h->size > 0)
+         .               {
+   676,635 ( 0.07%)          h->idx[0] = h->idx[h->size];
+         .                   HeapSiftDown(h, pool, 0);
+         .               }
+         .               return result;
+         .           }
+         .           
+         .           /* ---------- HashSet — закрытый список посещённых состояний ---------- */
+         .           
+         .           /*
+-- line 360 ----------------------------------------
+-- line 371 ----------------------------------------
+         .           /*
+         .            * HashPacked — хеш FNV-1a для PackedState.
+         .            * Смешиваем позицию игрока и все позиции ящиков.
+         .            * FNV-1a обеспечивает хорошее распределение для небольших структур.
+         .            */
+         .           static uint32_t HashPacked(const PackedState *ps, int nb)
+         .           {
+         .               uint32_t h = 2166136261u; // FNV offset basis
+   924,936 ( 0.10%)      h ^= ps->player;
+   308,312 ( 0.03%)      h *= 16777619u;           // FNV prime
+ 7,207,912 ( 0.76%)      for (int i = 0; i < nb; i++)
+         .               {
+ 3,160,944 ( 0.33%)          h ^= ps->boxes[i];
+ 1,580,472 ( 0.17%)          h *= 16777619u;
+         .               }
+         .               return h;
+         .           }
+         .           
+         .           /* PackedEqual — побайтовое сравнение двух состояний. */
+         .           static int PackedEqual(const PackedState *a, const PackedState *b, int nb)
+         .           {
+   329,156 ( 0.03%)      if (a->player != b->player) return 0;
+ 3,046,592 ( 0.32%)      for (int i = 0; i < nb; i++)
+ 2,416,620 ( 0.26%)          if (a->boxes[i] != b->boxes[i]) return 0;
+         .               return 1;
+         .           }
+         .           
+         .           static HashSet *CreateHashSet(int capacity)
+         .           {
+        36 ( 0.00%)      HashSet *hs = (HashSet *)calloc(1, sizeof(HashSet));
+       440 ( 0.00%)  => ./malloc/./malloc/malloc.c:calloc (6x)
+        24 ( 0.00%)      if (!hs) return NULL;
+        48 ( 0.00%)      hs->states = (PackedState *)malloc(sizeof(PackedState) * capacity);
+     2,102 ( 0.00%)  => ./malloc/./malloc/malloc.c:malloc (6x)
+        30 ( 0.00%)      hs->occupied = (char *)calloc(capacity, sizeof(char));
+   288,933 ( 0.03%)  => ./malloc/./malloc/malloc.c:calloc (6x)
+        12 ( 0.00%)      hs->capacity = capacity;
+         .               hs->mask = capacity - 1;
+        54 ( 0.00%)      if (!hs->states || !hs->occupied)
+         .               {
+         .                   free(hs->states);
+         .                   free(hs->occupied);
+         .                   free(hs);
+         .                   return NULL;
+         .               }
+         .               return hs;
+         .           }
+         .           
+         .           static void FreeHashSet(HashSet *hs)
+         .           {
+         .               if (!hs) return;
+        30 ( 0.00%)      free(hs->states);
+       926 ( 0.00%)  => ./malloc/./malloc/malloc.c:free (6x)
+        24 ( 0.00%)      free(hs->occupied);
+       633 ( 0.00%)  => ./malloc/./malloc/malloc.c:free (6x)
+        18 ( 0.00%)      free(hs);
+       192 ( 0.00%)  => ./malloc/./malloc/malloc.c:free (6x)
+         .           }
+         .           
+         .           /*
+         .            * HashSetGrow — удваивает ёмкость таблицы и перехеширует все записи.
+         .            * Вызывается автоматически при заполнении >50% (load factor 0.5),
+         .            * чтобы сохранить скорость линейного зондирования.
+         .            */
+         .           static int HashSetGrow(HashSet *hs, int nb)
+-- line 429 ----------------------------------------
+-- line 464 ----------------------------------------
+         .            * HashSetInsert — пытается вставить состояние ps в таблицу.
+         .            * Возвращает 1, если состояние новое (вставлено).
+         .            * Возвращает 0, если состояние уже присутствует (дубликат).
+         .            *
+         .            * Линейное зондирование: если ячейка занята другим состоянием,
+         .            * переходим к следующей по кругу (idx+1) & mask.
+         .            */
+         .           static int HashSetInsert(HashSet *hs, const PackedState *ps, int nb)
+ 3,083,120 ( 0.33%)  {
+ 1,541,560 ( 0.16%)      if (hs->count * 2 >= hs->capacity) // load factor > 0.5
+         .               {
+   157,457 ( 0.02%)          if (!HashSetGrow(hs, nb)) return 0;
+         .               }
+         .           
+   616,624 ( 0.07%)      uint32_t idx = HashPacked(ps, nb) & hs->mask;
+ 1,737,674 ( 0.18%)      while (hs->occupied[idx])
+         .               {
+   329,156 ( 0.03%)          if (PackedEqual(&hs->states[idx], ps, nb)) return 0; // уже есть
+    14,242 ( 0.00%)          idx = (idx + 1) & hs->mask;
+         .               }
+ 1,213,442 ( 0.13%)      hs->states[idx] = *ps;
+   301,710 ( 0.03%)      hs->occupied[idx] = 1;
+   150,855 ( 0.02%)      hs->count++;
+   150,855 ( 0.02%)      return 1;
+ 2,466,496 ( 0.26%)  }
+         .           
+         .           /* ---------- Главная функция: A* поиск решения ---------- */
+         .           
+         .           /*
+         .            * SolveLevel — запускает A* поиск от начального состояния уровня.
+         .            *
+         .            * Возвращает true и заполняет solver->moves последовательностью
+         .            * направлений (индексы 0..3 = вверх/вниз/влево/вправо), если решение
+-- line 496 ----------------------------------------
+-- line 506 ----------------------------------------
+         .            *         - Если новая клетка — ящик, попробовать толкнуть его дальше;
+         .            *           если ящик упирается в стену или другой ящик — пропустить.
+         .            *         - Если после толчка возник дедлок — пропустить.
+         .            *         - Если новое состояние уже в closed list — пропустить.
+         .            *         - Иначе создать дочерний узел и добавить в open list.
+         .            *   3. Если путь найден, восстановить его, идя по цепочке parent.
+         .            */
+         .           bool SolveLevel(const Level *level, Solver *solver)
+        48 ( 0.00%)  {
+        18 ( 0.00%)      int nb = level->num_boxes;
+         .               bool success = false;
+         .           
+         .               // Инициализация трёх структур данных
+         .               NodePool *pool  = CreateNodePool(NODES_INIT_CAP);
+         .               MinHeap  *open  = CreateHeap(HEAP_INIT_CAP);
+         .               HashSet  *closed = CreateHashSet(HASH_INIT_CAP);
+         .           
+        36 ( 0.00%)      if (!pool || !open || !closed)
+         .                   goto cleanup;
+         .           
+         .               // Кодируем цели в uint16_t и сортируем для сравнения с состояниями
+         .               uint16_t goals[MAX_BOXES];
+       159 ( 0.00%)      for (int i = 0; i < nb; i++)
+       125 ( 0.00%)          goals[i] = (uint16_t)(level->goals[i].y * MAX_FIELD + level->goals[i].x);
+        24 ( 0.00%)      SortBoxes(goals, nb);
+       564 ( 0.00%)  => /home/kahooso/Desktop/sokoban/src/solver.c:SortBoxes (6x)
+         .           
+         .               // Создаём корневой узел (начальное состояние)
+         .               {
+         .                   AStarNode root;
+        42 ( 0.00%)          root.state.player = (uint16_t)(level->player.y * MAX_FIELD + level->player.x);
+   644,343 ( 0.07%)          for (int i = 0; i < nb; i++)
+       125 ( 0.00%)              root.state.boxes[i] = (uint16_t)(level->boxes[i].y * MAX_FIELD + level->boxes[i].x);
+        42 ( 0.00%)          SortBoxes(root.state.boxes, nb); // нормализуем порядок ящиков
+       548 ( 0.00%)  => /home/kahooso/Desktop/sokoban/src/solver.c:SortBoxes (6x)
+         6 ( 0.00%)          root.parent = -1;      // корень не имеет родителя
+         .                   root.direction = -1;   // корень не имеет направления
+         6 ( 0.00%)          root.g = 0;            // стоимость пути от старта = 0
+        30 ( 0.00%)          root.f = Heuristic(root.state.boxes, goals, nb); // f = g + h = 0 + h
+     3,369 ( 0.00%)  => /home/kahooso/Desktop/sokoban/src/solver.c:Heuristic (6x)
+         .           
+         .                   int root_idx = PoolAdd(pool, &root);
+        12 ( 0.00%)          if (root_idx < 0) goto cleanup;
+        42 ( 0.00%)          HeapPush(open, pool, root_idx);
+       120 ( 0.00%)  => /home/kahooso/Desktop/sokoban/src/solver.c:HeapPush (6x)
+        30 ( 0.00%)          HashSetInsert(closed, &root.state, nb); // сразу помечаем как посещённый
+       462 ( 0.00%)  => /home/kahooso/Desktop/sokoban/src/solver.c:HashSetInsert (6x)
+         .               }
+         .           
+         .               int found = -1;      // индекс найденного целевого узла (-1 = не найден)
+         6 ( 0.00%)      int iterations = 0;
+         .           
+         .               // Главный цикл A*
+ 1,353,320 ( 0.14%)      while (open->size > 0 && iterations < MAX_ITERATIONS)
+         .               {
+   135,335 ( 0.01%)          iterations++;
+         .           
+         .                   // Извлекаем узел с наименьшим f из open list
+         .                   int cur_idx = HeapPop(open, pool);
+   406,005 ( 0.04%)          if (cur_idx < 0) break;
+         .           
+         .                   /*
+         .                    * Копируем данные текущего узла на стек.
+         .                    * Это критически важно: PoolAdd внутри цикла может вызвать realloc,
+         .                    * после чего pool->data укажет на новый адрес, а старые указатели
+         .                    * на элементы массива станут невалидными. Работая с локальными
+         .                    * копиями cur_state и cur_g, мы избегаем use-after-realloc.
+         .                    */
+ 1,218,015 ( 0.13%)          PackedState cur_state = pool->data[cur_idx].state;
+   270,658 ( 0.03%)          int cur_g = pool->data[cur_idx].g;
+         .           
+         .                   // Проверка победы: все ящики совпадают с отсортированными целями
+         .                   int won = 1;
+   718,231 ( 0.08%)          for (int i = 0; i < nb; i++)
+   437,154 ( 0.05%)              if (cur_state.boxes[i] != goals[i]) { won = 0; break; }
+         .                   if (won) { found = cur_idx; break; }
+         .           
+         .                   // Текущая позиция игрока
+   947,303 ( 0.10%)          int px = cur_state.player % MAX_FIELD;
+ 1,082,632 ( 0.11%)          int py = cur_state.player / MAX_FIELD;
+         .           
+         .                   // Раскрытие узла: пробуем все 4 направления
+ 1,623,948 ( 0.17%)          for (int d = 0; d < 4; d++)
+         .                   {
+ 1,082,632 ( 0.11%)              int nx = px + SDX[d]; // куда шагает игрок
+ 2,165,312 ( 0.23%)              int ny = py + SDY[d];
+         .           
+         .                       // Проверяем границы и стены
+ 7,578,424 ( 0.80%)              if (nx < 0 || nx >= level->width || ny < 0 || ny >= level->height) continue;
+ 3,467,442 ( 0.37%)              if (level->cells[ny][nx] == CELL_WALL) continue;
+         .           
+ 1,287,080 ( 0.14%)              uint16_t npos = (uint16_t)(ny * MAX_FIELD + nx); // новая позиция игрока
+         .           
+         .                       // Копируем ящики из локальной копии состояния (а не из pool->data!)
+         .                       uint16_t new_boxes[MAX_BOXES];
+ 3,539,474 ( 0.37%)              memcpy(new_boxes, cur_state.boxes, sizeof(uint16_t) * nb);
+ 3,986,490 ( 0.42%)  => /build/reproducible-path/glibc-2.43/string/../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S:__memcpy_avx_unaligned_erms (321,770x)
+       926 ( 0.00%)  => /build/reproducible-path/glibc-2.43/elf/../sysdeps/x86_64/dl-trampoline.h:_dl_runtime_resolve_xsave (1x)
+         .           
+         .                       int box_idx = IsBoxAt(new_boxes, nb, npos);
+         .           
+         .                       if (box_idx != -1) // на пути ящик — пытаемся его толкнуть
+         .                       {
+    29,658 ( 0.00%)                  int bnx = nx + SDX[d]; // куда полетит ящик
+    29,658 ( 0.00%)                  int bny = ny + SDY[d];
+   266,922 ( 0.03%)                  if (bnx < 0 || bnx >= level->width || bny < 0 || bny >= level->height) continue;
+   177,948 ( 0.02%)                  if (level->cells[bny][bnx] == CELL_WALL) continue; // ящик упёрся в стену
+    70,608 ( 0.01%)                  uint16_t bpos = (uint16_t)(bny * MAX_FIELD + bnx);
+         .                           if (IsBoxAt(new_boxes, nb, bpos) != -1) continue; // ящик упёрся в другой ящик
+         .           
+   200,583 ( 0.02%)                  new_boxes[box_idx] = bpos; // перемещаем ящик
+         .                       }
+         .           
+         .                       // Отсекаем дедлоки: если после толчка возник тупик — пропускаем
+         .                       if (box_idx != -1 && IsDeadState(level, new_boxes, nb, goals))
+         .                           continue;
+         .           
+         .                       // Нормализуем порядок ящиков для однозначного представления состояния
+ 1,849,836 ( 0.20%)              SortBoxes(new_boxes, nb);
+25,691,412 ( 2.71%)  => /home/kahooso/Desktop/sokoban/src/solver.c:SortBoxes (308,306x)
+         .           
+         .                       // Формируем новое состояние
+         .                       PackedState ns;
+         .                       ns.player = npos;
+ 2,158,142 ( 0.23%)              memcpy(ns.boxes, new_boxes, sizeof(uint16_t) * nb);
+ 3,820,534 ( 0.40%)  => /build/reproducible-path/glibc-2.43/string/../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S:__memcpy_avx_unaligned_erms (308,306x)
+         .           
+         .                       // Проверяем, посещали ли мы это состояние раньше
+ 2,158,142 ( 0.23%)              if (!HashSetInsert(closed, &ns, nb))
+30,737,673 ( 3.25%)  => /home/kahooso/Desktop/sokoban/src/solver.c:HashSetInsert (308,306x)
+         .                           continue; // уже в closed list — пропускаем
+         .           
+         .                       // Создаём дочерний узел: g увеличивается на 1 (один ход),
+         .                       // f = g + h(нового состояния)
+         .                       AStarNode child;
+ 2,866,131 ( 0.30%)              child.state = ns;
+         .                       child.parent = cur_idx;  // ссылка на родителя для восстановления пути
+         .                       child.direction = d;     // направление, которым был сделан этот ход
+   301,698 ( 0.03%)              child.g = cur_g + 1;
+ 1,055,943 ( 0.11%)              child.f = child.g + Heuristic(new_boxes, goals, nb);
+120,295,443 (12.71%)  => /home/kahooso/Desktop/sokoban/src/solver.c:Heuristic (150,849x)
+         .           
+         .                       int child_idx = PoolAdd(pool, &child);
+   301,698 ( 0.03%)              if (child_idx < 0) goto done; // закончилась память
+         .           
+ 1,357,641 ( 0.14%)              if (!HeapPush(open, pool, child_idx))
+ 6,143,912 ( 0.65%)  => /home/kahooso/Desktop/sokoban/src/solver.c:HeapPush (150,849x)
+         .                           goto done;
+         .                   }
+         .               }
+         .           
+         .           done:
+        12 ( 0.00%)      if (found >= 0)
+         .               {
+         .                   /*
+         .                    * Восстановление пути от финального узла до корня.
+         .                    *
+         .                    * Идём по цепочке parent-указателей, считаем длину пути,
+         .                    * затем заполняем массив moves в обратном порядке (от старта к финишу).
+         .                    */
+         .           
+         .                   // Первый проход: считаем длину пути
+        18 ( 0.00%)          int path_len = 0;
+         .                   int idx = found;
+       466 ( 0.00%)          while (idx > 0) // корень имеет parent = -1, его не считаем
+         .                   {
+       224 ( 0.00%)              path_len++;
+       672 ( 0.00%)              idx = pool->data[idx].parent;
+         .                   }
+         .           
+        42 ( 0.00%)          solver->moves = (int *)malloc(sizeof(int) * path_len);
+     1,416 ( 0.00%)  => ./malloc/./malloc/malloc.c:malloc (6x)
+        12 ( 0.00%)          if (solver->moves)
+         .                   {
+         6 ( 0.00%)              solver->num_moves = path_len;
+         6 ( 0.00%)              solver->current_move = 0;
+         6 ( 0.00%)              solver->active = true;
+        18 ( 0.00%)              solver->timer = 0;
+         .           
+         .                       // Второй проход: заполняем moves с конца к началу
+         .                       idx = found;
+       702 ( 0.00%)              for (int i = path_len - 1; i >= 0; i--)
+         .                       {
+       690 ( 0.00%)                  solver->moves[i] = pool->data[idx].direction;
+       224 ( 0.00%)                  idx = pool->data[idx].parent;
+         .                       }
+         6 ( 0.00%)              success = true;
+         .                   }
+         .               }
+         .           
+        76 ( 0.00%)      printf("[solver] iterations=%d  pool=%d  hash=%d  found=%s\n",
+     9,337 ( 0.00%)  => ./stdio-common/./stdio-common/printf.c:printf (6x)
+       759 ( 0.00%)  => /build/reproducible-path/glibc-2.43/elf/../sysdeps/x86_64/dl-trampoline.h:_dl_runtime_resolve_xsave (1x)
+         .                      iterations, pool->count, closed->count,
+         .                      found >= 0 ? "YES" : "NO");
+         .           
+         .           cleanup:
+         .               FreeNodePool(pool);
+         .               FreeHeap(open);
+         .               FreeHashSet(closed);
+         .               return success;
+        54 ( 0.00%)  }
+         .           
+         .           /* FreeSolver — освобождает память, выделенную под массив ходов. */
+         .           void FreeSolver(Solver *solver)
+        18 ( 0.00%)  {
+        18 ( 0.00%)      if (solver->moves)
+         .               {
+        12 ( 0.00%)          free(solver->moves);
+       192 ( 0.00%)  => ./malloc/./malloc/malloc.c:free (6x)
+        12 ( 0.00%)          solver->moves = NULL;
+         .               }
+         6 ( 0.00%)      solver->num_moves = 0;
+         .               solver->current_move = 0;
+         6 ( 0.00%)      solver->active = false;
+        12 ( 0.00%)  }
+
+--------------------------------------------------------------------------------
+The following files chosen for auto-annotation could not be found:
+--------------------------------------------------------------------------------
+  ./stdlib/../string/bits/string_fortified.h
+  ./stdlib/./stdlib/rand.c
+  ./stdlib/./stdlib/random.c
+  ./stdlib/./stdlib/random_r.c
+  /build/reproducible-path/glibc-2.43/string/../sysdeps/x86_64/multiarch/memmove-vec-unaligned-erms.S
+
+--------------------------------------------------------------------------------
+Ir                   
+--------------------------------------------------------------------------------
+616,607,794 (65.14%)  events annotated
+
