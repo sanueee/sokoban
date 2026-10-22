@@ -22,8 +22,8 @@ typedef struct
     char played_at[32];
 } Session;
 
-bool open(const char *path);
-void close(void);
+bool db_open(const char *path);
+void db_close(void);
 
 int create_user(const char *name);
 int get_all_users(User *out, int max_count);

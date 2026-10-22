@@ -6,7 +6,7 @@
 
 static sqlite3 *db = NULL;
 
-bool open(const char *path)
+bool db_open(const char *path)
 {
     if (sqlite3_open(path, &db) != SQLITE_OK)
     {
@@ -40,7 +40,7 @@ bool open(const char *path)
     return 1;
 }
 
-void close(void)
+void db_close(void)
 {
     if (db)
     {

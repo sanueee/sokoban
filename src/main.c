@@ -26,7 +26,7 @@ int main(void)
 
     Music *current_music = &music_menu;
 
-    open("sokoban.db");
+    db_open("sokoban.db");
 
     Screen screen = SCREEN_LOGIN;
     Difficulty diff = DIFF_EASY;
@@ -179,7 +179,7 @@ int main(void)
 
     if (solver.active) FreeSolver(&solver);
     FreeUndoStack(&level);
-    close();
+    db_close();
 
     UnloadMusicStream(music_menu);
     UnloadMusicStream(music_game);
