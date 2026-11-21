@@ -5,12 +5,12 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define BASE_SEED 6769
+
 int main(int argc, char *argv[])
 {
-    int n = 100;
+    int n = 5;
     if (argc >= 2) n = atoi(argv[1]);
-
-    srand((unsigned)time(NULL));
 
     FILE *f = fopen("../tests/bench_results.csv", "w");
     if (!f) { fprintf(stderr, "cannot open bench_results.csv\n"); return 1; }
@@ -19,10 +19,11 @@ int main(int argc, char *argv[])
 
     const char *diff_names[] = {"easy", "medium", "hard"};
 
-    for (int d = 0; d < 3; d++)
+    for (int d = 0; d < 3; d++) // по сложности
     {
-        for (int i = 0; i < n; i++)
+        for (int i = 0; i < n; i++) // i-прогон для одной сложности
         {
+            srand((unsigned)BASE_SEED + d * 10000 + i); // детерминированный сид для одного прогона (идентичность входных данных)
             struct timespec t0, t1;
 
             clock_gettime(CLOCK_MONOTONIC, &t0);

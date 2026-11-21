@@ -14,6 +14,7 @@
 
 int main(void)
 {
+    srand((unsigned)time(NULL)); // инициализация гпсч переехала сюда (см. п. 2.1 отчета)
     InitWindow(WIDTH, HEIGHT, "Sokoban");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetTargetFPS(FRAMES);
@@ -42,12 +43,12 @@ int main(void)
         {
             level.time_elapsed += GetFrameTime();
 
-            if (IsKeyPressed(KEY_ESCAPE))
+            if (IsKeyPressed(KEY_ESCAPE)) // работает решатель - надо завершить
             {
                 if (solver.active) FreeSolver(&solver);
                 screen = SCREEN_PAUSE;
             }
-            else if (solver.active)
+            else if (solver.active) // работает решатель
             {
                 solver.timer += GetFrameTime();
                 if (solver.timer >= SOLVER_STEP_INTERVAL)
@@ -148,7 +149,7 @@ int main(void)
             break;
         case SCREEN_GAME:
             RenderLevel(&level);
-            if (solver.active)
+            if (solver.active) // отрисовка подписи решателя
             {
                 const char *stxt = TextFormat("AI SOLVING  %d/%d", solver.current_move, solver.num_moves);
                 int stw = MeasureText(stxt, 20);

@@ -2,7 +2,6 @@
 #include "game.h"
 #include "types.h"
 #include <stdlib.h>
-#include <time.h>
 #include <string.h>
 
 static const int DX[4] = {0, 0, -1, 1};
@@ -233,7 +232,7 @@ static int HasDeadlock(Level *level)
 
 Level GenerateLevel(Difficulty difficulty)
 {
-    srand(time(NULL));
+    // - убрана инициализация гпсч (см. п. 2.1 отчета)
     Level level = {0};
     level.difficulty = difficulty;
     level.undo_head = NULL;
