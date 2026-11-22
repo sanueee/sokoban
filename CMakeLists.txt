@@ -1,7 +1,18 @@
 cmake_minimum_required(VERSION 3.15)
 project(sokoban C)
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Запрет сборки прямо в корне репозитория
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+    message(FATAL_ERROR "In-source build is not allowed. Run: cmake -B build")
+endif()
+
+# Тип сборки по умолчанию для одноконфигурационных генераторов (Make/Ninja)
+if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Build type" FORCE)
+endif()
 
 # macOS (Homebrew)
 if(APPLE)
@@ -22,6 +33,12 @@ endif()
 find_package(raylib REQUIRED)
 find_package(SQLite3 REQUIRED)
 
+if(TARGET SQLite3::SQLite3)
+    set(SQLITE_TARGET SQLite3::SQLite3)
+else()
+    set(SQLITE_TARGET SQLite::SQLite3)
+endif()
+
 add_executable(sokoban
     src/solver.c
     src/main.c
@@ -32,8 +49,7 @@ add_executable(sokoban
     src/db.c
     src/rng.c
 )
-
-target_link_libraries(sokoban raylib SQLite::SQLite3)
+target_link_libraries(sokoban PRIVATE raylib ${SQLITE_TARGET})
 
 add_executable(sokoban_bench
     tests/bench.c
@@ -43,7 +59,7 @@ add_executable(sokoban_bench
     src/rng.c
 )
 target_include_directories(sokoban_bench PRIVATE src)
-target_link_libraries(sokoban_bench raylib)
+target_link_libraries(sokoban_bench PRIVATE raylib)
 
 # Windows: copy required DLLs next to the executable after build
 if(WIN32)
