@@ -1,4 +1,5 @@
 #include "raylib.h"
+#include "rng.h"
 #include "types.h"
 #include "level.h"
 #include "render.h"

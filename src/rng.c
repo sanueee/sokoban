@@ -1,6 +1,3 @@
-#ifndef RNG_H
-#define RNG_H
-
 #include "rng.h"
 
 uint32_t rng_state = 1;
@@ -18,5 +15,3 @@ uint32_t rng_next(void)
     x = x ^ (x << 5);
     return rng_state = x;
 }
-
-#endif
