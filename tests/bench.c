@@ -1,6 +1,7 @@
 #include "../src/level.h"
 #include "../src/solver.h"
 #include "../src/game.h"
+#include "../src/rng.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -23,7 +24,7 @@ int main(int argc, char *argv[])
     {
         for (int i = 0; i < n; i++) // i-прогон для одной сложности
         {
-            srand((unsigned)BASE_SEED + d * 10000 + i); // детерминированный сид для одного прогона (идентичность входных данных)
+            rng_seed((unsigned)BASE_SEED + d * 10000 + i); // детерминированный сид для одного прогона (идентичность входных данных)
             struct timespec t0, t1;
 
             clock_gettime(CLOCK_MONOTONIC, &t0);

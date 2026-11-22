@@ -30,6 +30,7 @@ add_executable(sokoban
     src/render.c
     src/ui.c
     src/db.c
+    src/rng.c
 )
 
 target_link_libraries(sokoban raylib SQLite::SQLite3)
@@ -39,6 +40,7 @@ add_executable(sokoban_bench
     src/solver.c
     src/level.c
     src/game.c
+    src/rng.c
 )
 target_include_directories(sokoban_bench PRIVATE src)
 target_link_libraries(sokoban_bench raylib)

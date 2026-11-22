@@ -1,4 +1,5 @@
 #include "level.h"
+#include "rng.h"
 #include "game.h"
 #include "types.h"
 #include <stdlib.h>
@@ -18,7 +19,7 @@ static void ShuffleDirs(int *dirs)
 { // shuffle directions
     for (int i = 0; i < 4; i++)
     {
-        int r = rand() % 4;
+        int r = rng_next() % 4;
         int temp = dirs[i];
         dirs[i] = dirs[r];
         dirs[r] = temp;
@@ -60,8 +61,8 @@ static void GenerateMaze(Level *const level)
 
     // вырезаем лабиринт. обязательно начинаем с нечетных координат
     // иначе коридоры могут "прилипнуть" к краю карты
-    int startX = 1 + (rand() % ((level->width - 2) / 2)) * 2;
-    int startY = 1 + (rand() % ((level->height - 2) / 2)) * 2;
+    int startX = 1 + (rng_next() % ((level->width - 2) / 2)) * 2;
+    int startY = 1 + (rng_next() % ((level->height - 2) / 2)) * 2;
     CarveMaze(level, startX, startY);
 
     // создаем "комнаты" и циклы
@@ -71,8 +72,8 @@ static void GenerateMaze(Level *const level)
 
     for (int i = 0; i < extra_spaces; i++)
     {
-        int rx = 1 + rand() % (level->width - 2);
-        int ry = 1 + rand() % (level->height - 2);
+        int rx = 1 + rng_next() % (level->width - 2);
+        int ry = 1 + rng_next() % (level->height - 2);
 
         if (level->cells[ry][rx] == CELL_WALL)
         {
@@ -148,8 +149,8 @@ static int PlaceGoalsAndBoxes(Level *const level)
     while (placed < level->num_boxes && attempts < 1000)
     {
         attempts++;
-        int x = 2 + rand() % (level->width - 4);
-        int y = 2 + rand() % (level->height - 4);
+        int x = 2 + rng_next() % (level->width - 4);
+        int y = 2 + rng_next() % (level->height - 4);
 
         if (level->cells[y][x] != CELL_FLOOR) continue;
 
@@ -182,8 +183,8 @@ static void ReverseSolve(Level *level, int target_moves)
         int moved = 0;
         for (int attempts = 0; attempts < 100 && !moved; attempts++)
         {
-            int box_idx = rand() % level->num_boxes;
-            int dir = rand() % 4;
+            int box_idx = rng_next() % level->num_boxes;
+            int dir = rng_next() % 4;
 
             int bx = level->boxes[box_idx].x;
             int by = level->boxes[box_idx].y;
@@ -237,40 +238,40 @@ Level GenerateLevel(Difficulty difficulty)
     level.difficulty = difficulty;
     level.undo_head = NULL;
     level.undo_count = 0;
- 
+
     int valid = 0;
     while (!valid)
     {
         switch (difficulty) {
             case DIFF_EASY:
-                level.width = 9 + rand() % 3;
-                level.height = 9 + rand() % 3;
-                level.num_boxes = 3 + rand() % 2;
+                level.width = 9 + rng_next() % 3;
+                level.height = 9 + rng_next() % 3;
+                level.num_boxes = 3 + rng_next() % 2;
                 break;
             case DIFF_MEDIUM:
-                level.width = 11 + rand() % 2;
-                level.height = 11 + rand() % 2;
-                level.num_boxes = 5 + rand() % 2;
+                level.width = 11 + rng_next() % 2;
+                level.height = 11 + rng_next() % 2;
+                level.num_boxes = 5 + rng_next() % 2;
                 break;
             case DIFF_HARD:
-                level.width = 13 + rand() % 2;
-                level.height = 13 + rand() % 2;
-                level.num_boxes = 7 + rand() % 2;
+                level.width = 13 + rng_next() % 2;
+                level.height = 13 + rng_next() % 2;
+                level.num_boxes = 7 + rng_next() % 2;
                 break;
         }
- 
+
         for (size_t i = 0; i < level.height; i++)
             for (size_t j = 0; j < level.width; j++)
                 level.cells[i][j] = CELL_WALL;
- 
+
         GenerateMaze(&level);
- 
+
         if (!PlaceGoalsAndBoxes(&level)) continue;
- 
+
         int player_placed = 0;
         for (int a = 0; a < 500 && !player_placed; a++) {
-            int px = 1 + rand() % (level.width - 2);
-            int py = 1 + rand() % (level.height - 2);
+            int px = 1 + rng_next() % (level.width - 2);
+            int py = 1 + rng_next() % (level.height - 2);
             if (level.cells[py][px] == CELL_FLOOR && !HasBox(&level, px, py))
             {
                 level.player.x = px; level.player.y = py;
@@ -278,29 +279,29 @@ Level GenerateLevel(Difficulty difficulty)
             }
         }
         if (!player_placed) continue;
- 
+
         int target_moves = (difficulty == DIFF_EASY) ? 30 : (difficulty == DIFF_MEDIUM ? 60 : 100);
         ReverseSolve(&level, target_moves);
- 
+
         int boxes_on_goals = 0;
         for (int i = 0; i < level.num_boxes; i++)
         {
             if (IsOnGoal(&level, level.boxes[i])) boxes_on_goals++;
         }
         if (boxes_on_goals > 0) continue;
- 
+
         if (HasDeadlock(&level)) continue;
- 
+
         level.initial_state.player = level.player;
         memcpy(level.initial_state.boxes, level.boxes, sizeof(level.boxes));
         level.initial_state.step_count = 0;
- 
+
         valid = 1;
     }
- 
+
     return level;
 }
- 
+
 void RestartLevel(Level *level)
 {
     FreeUndoStack(level);

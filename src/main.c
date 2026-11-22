@@ -14,7 +14,7 @@
 
 int main(void)
 {
-    srand((unsigned)time(NULL)); // инициализация гпсч переехала сюда (см. п. 2.1 отчета)
+    rng_seed((unsigned)time(NULL)); // инициализация гпсч переехала сюда (см. п. 2.1 отчета)
     InitWindow(WIDTH, HEIGHT, "Sokoban");
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetTargetFPS(FRAMES);
@@ -153,7 +153,7 @@ int main(void)
             {
                 const char *stxt = TextFormat("AI SOLVING  %d/%d", solver.current_move, solver.num_moves);
                 int stw = MeasureText(stxt, 20);
-                DrawText(stxt, GetScreenWidth() / 2 - stw / 2, GetScreenHeight() - 36, 20, 
+                DrawText(stxt, GetScreenWidth() / 2 - stw / 2, GetScreenHeight() - 36, 20,
                          CLITERAL(Color){140, 200, 120, 255});
             }
             break;
