@@ -1,0 +1,5 @@
+build/
+*.db
+.DS_Store
+.cache
+*.ps1
