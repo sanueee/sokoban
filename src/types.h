@@ -2,11 +2,11 @@
 #define _TYPES_H
 
 #define MAX_BOXES 10
-#define MAX_FIELD 20
+#define MAX_FIELD 16
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef uint16_t CellPos;
+typedef uint8_t CellPos;
 
 typedef enum
 {
@@ -97,12 +97,12 @@ typedef struct
 // узел A*
 typedef struct
 {
+    int parent;    // индекс родителя в пуле (-1 для корня)
+    int direction; // направление толчка (0-3), -1 для корня
+    int g;         // число толчков от старта
+    int f;         // g + h (приоритет в куче)
     PackedState state;
-    int parent;       // индекс родителя в пуле (-1 для корня)
-    int direction;    // направление толчка (0-3), -1 для корня
     CellPos push_box; // позиция ящика до толчка
-    int g;            // число толчков от старта
-    int f;            // g + h (приоритет в куче)
 } AStarNode;
 
 // пул узлов (динамический массив, растёт ×2)
@@ -116,7 +116,7 @@ typedef struct
 // бинарная мин-куча по f (приоритетная очередь)
 typedef struct
 {
-    int *idx;       // индексы в NodePool
+    int *idx; // индексы в NodePool
     int size;
     int capacity;
 } MinHeap;
@@ -127,7 +127,7 @@ typedef struct
     PackedState *states;
     char *occupied;
     int capacity;
-    int mask;        // capacity - 1
+    int mask; // capacity - 1
     int count;
 } HashSet;
 
