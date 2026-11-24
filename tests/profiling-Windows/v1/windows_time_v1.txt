@@ -1,0 +1,6 @@
+﻿Real time (s): 1.63
+User time (s): 1.52
+Sys time (s):  0.06
+Peak Working Set / Max RSS: 0.0264 GiB (28323840 B)
+Peak Commit / Pagefile:     0.046 GiB (49430528 B)
+Page Faults (total):        27687
