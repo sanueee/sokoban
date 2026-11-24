@@ -3,7 +3,17 @@
 
 #include <stdint.h>
 
-void rng_seed(uint32_t);
-uint32_t rng_next(void);
+extern uint32_t rng_state;
+
+void rng_seed(uint32_t seed);
+
+static inline uint32_t rng_next(void)
+{
+    uint32_t x = rng_state;
+    x = x ^ (x << 13);
+    x = x ^ (x >> 17);
+    x = x ^ (x << 5);
+    return rng_state = x;
+}
 
 #endif
