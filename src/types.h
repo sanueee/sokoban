@@ -4,6 +4,9 @@
 #define MAX_BOXES 10
 #define MAX_FIELD 20
 #include <stdbool.h>
+#include <stdint.h>
+
+typedef uint16_t CellPos;
 
 typedef enum
 {
@@ -87,18 +90,19 @@ typedef struct
 
 typedef struct
 {
-    unsigned short player;
-    unsigned short boxes[MAX_BOXES];
+    CellPos player;
+    CellPos boxes[MAX_BOXES];
 } PackedState;
 
 // узел A*
 typedef struct
 {
     PackedState state;
-    int parent;      // индекс родителя в пуле (-1 для корня)
-    int direction;   // направление хода (0-3), -1 для корня
-    int g;           // стоимость пути от старта
-    int f;           // g + h (приоритет в куче)
+    int parent;       // индекс родителя в пуле (-1 для корня)
+    int direction;    // направление толчка (0-3), -1 для корня
+    CellPos push_box; // позиция ящика до толчка
+    int g;            // число толчков от старта
+    int f;            // g + h (приоритет в куче)
 } AStarNode;
 
 // пул узлов (динамический массив, растёт ×2)

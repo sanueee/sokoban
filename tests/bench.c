@@ -40,11 +40,22 @@ int main(int argc, char *argv[])
             double solve_ms = (t1.tv_sec - t0.tv_sec) * 1000.0 +
                               (t1.tv_nsec - t0.tv_nsec) / 1e6;
 
+            if (solved)
+            {
+                for (int m = 0; m < solver.num_moves; m++)
+                    ApplyMove(&level, solver.moves[m]);
+                if (!CheckWin(&level))
+                {
+                    fprintf(stderr, "\n[ERROR] invalid solution at %s #%d\n", diff_names[d], i + 1);
+                    solved = 0;
+                }
+            }
+
             fprintf(f, "%s;%d;%.2f;%.2f;%d\n",
                     diff_names[d], level.num_boxes, gen_ms, solve_ms, solved);
             fflush(f);
 
-            if (solved) FreeSolver(&solver);
+            if (solver.moves) FreeSolver(&solver);
             FreeUndoStack(&level);
 
             printf("\r[%s] %d/%d  ", diff_names[d], i + 1, n);

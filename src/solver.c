@@ -56,11 +56,11 @@ static const int SDY[4] = {-1, 1, 0, 0};
  * одни и те же ящики всегда дают одинаковую PackedState независимо от
  * порядка их толчков.
  */
-static void SortBoxes(uint16_t *boxes, int n)
+static void SortBoxes(CellPos *boxes, int n)
 {
     for (int i = 1; i < n; i++)
     {
-        uint16_t key = boxes[i];
+        CellPos key = boxes[i];
         int j = i - 1;
         while (j >= 0 && boxes[j] > key)
         {
@@ -76,7 +76,7 @@ static void SortBoxes(uint16_t *boxes, int n)
  * Возвращает индекс в массиве boxes или -1, если ящика нет.
  * (Количество ящиков мало — до MAX_BOXES=10 — поэтому O(n) достаточно.)
  */
-static int IsBoxAt(const uint16_t *boxes, int n, uint16_t pos)
+static int IsBoxAt(const CellPos *boxes, int n, CellPos pos)
 {
     for (int i = 0; i < n; i++)
         if (boxes[i] == pos) return i;
@@ -86,7 +86,7 @@ static int IsBoxAt(const uint16_t *boxes, int n, uint16_t pos)
 /*
  * IsGoal — проверяет, является ли позиция pos одной из целевых клеток.
  */
-static int IsGoal(const uint16_t *goals, int n, uint16_t pos)
+static int IsGoal(const CellPos *goals, int n, CellPos pos)
 {
     for (int i = 0; i < n; i++)
         if (goals[i] == pos) return 1;
@@ -107,7 +107,7 @@ static int IsGoal(const uint16_t *goals, int n, uint16_t pos)
  * это может привести к тому, что несколько ящиков «претендуют» на одну
  * ближайшую цель — эвристика занижена, но остаётся допустимой.
  */
-static int Heuristic(const uint16_t *boxes, const uint16_t *goals, int n)
+static int Heuristic(const CellPos *boxes, const CellPos *goals, int n)
 {
     int h = 0;
     for (int i = 0; i < n; i++)
@@ -150,7 +150,7 @@ static int Heuristic(const uint16_t *boxes, const uint16_t *goals, int n)
  * Эти проверки значительно сокращают дерево поиска, отсекая заведомо
  * проигрышные ветки.
  */
-static int IsDeadState(const Level *level, const uint16_t *boxes, int nb, const uint16_t *goals)
+static int IsDeadState(const Level *level, const CellPos *boxes, int nb, const CellPos *goals)
 {
     for (int i = 0; i < nb; i++)
     {
@@ -159,7 +159,7 @@ static int IsDeadState(const Level *level, const uint16_t *boxes, int nb, const 
         int x = boxes[i] % MAX_FIELD;
         int y = boxes[i] / MAX_FIELD;
 
-        // 1) Угловой дедлок: две смежные стены вокруг ящика
+        // 1) угловой дедлок: две смежные стены вокруг ящика
         int w_up    = (level->cells[y - 1][x] == CELL_WALL);
         int w_down  = (level->cells[y + 1][x] == CELL_WALL);
         int w_left  = (level->cells[y][x - 1] == CELL_WALL);
@@ -169,7 +169,7 @@ static int IsDeadState(const Level *level, const uint16_t *boxes, int nb, const 
             (w_down && w_left) || (w_down && w_right))
             return 1;
 
-        // 2) Дедлок 2×2: проверяем все четыре квадрата, в которых участвует
+        // 2) дедлок 2×2: проверяем все четыре квадрата, в которых участвует
         //    текущий ящик (ящик может быть в любом из четырёх углов квадрата)
         int offsets[4][2] = {{0,0}, {-1,0}, {0,-1}, {-1,-1}};
         for (int q = 0; q < 4; q++)
@@ -179,12 +179,12 @@ static int IsDeadState(const Level *level, const uint16_t *boxes, int nb, const 
             if (bx < 0 || bx + 1 >= level->width || by < 0 || by + 1 >= level->height)
                 continue;
 
-            // Четыре клетки квадрата
-            uint16_t cells[4] = {
-                (uint16_t)(by       * MAX_FIELD + bx),
-                (uint16_t)(by       * MAX_FIELD + bx + 1),
-                (uint16_t)((by + 1) * MAX_FIELD + bx),
-                (uint16_t)((by + 1) * MAX_FIELD + bx + 1)
+            // четыре клетки квадрата
+            CellPos cells[4] = {
+                (CellPos)(by       * MAX_FIELD + bx),
+                (CellPos)(by       * MAX_FIELD + bx + 1),
+                (CellPos)((by + 1) * MAX_FIELD + bx),
+                (CellPos)((by + 1) * MAX_FIELD + bx + 1)
             };
 
             int all_blocked = 1, any_box_off_goal = 0;
@@ -438,7 +438,7 @@ static int HashSetGrow(HashSet *hs, int nb)
         return 0;
     }
     int new_mask = new_cap - 1;
-    // Перенос всех существующих записей в новую таблицу
+    // перенос всех существующих записей в новую таблицу
     for (int i = 0; i < hs->capacity; i++)
     {
         if (!hs->occupied[i]) continue;
@@ -487,158 +487,284 @@ static int HashSetInsert(HashSet *hs, const PackedState *ps, int nb)
     return 1;
 }
 
-/* ---------- Главная функция: A* поиск решения ---------- */
+/*
+ * ComputeReachable — обход поля в ширину (BFS) от клетки start_pos.
+ *
+ * Зачем эта функция вызывается в двух режимах:
+ *   1) reachable != NULL (при раскрытии узла): заполняет карту достижимости,
+ *      чтобы за O(1) понимать, с каких сторон игрок может подойти к ящикам.
+ *   2) reachable == NULL (при создании дочернего узла): карта не нужна,
+ *      нужен только возвращаемый минимум — каноническая позиция игрока.
+ *
+ * Значения в массиве vis / reachable:
+ *   0 — клетка ещё не посещена (или недостижима игроком)
+ *   1 — клетка достижима игроком
+ *   2 — в клетке стоит ящик (препятствие для ходьбы и маркер для O(1)-проверки)
+ *
+ * Возвращает минимальный индекс клетки (CellPos), куда может дойти игрок.
+ * Все позиции игрока внутри одной связной области дают один и тот же минимум,
+ * поэтому дублирующие состояния ходьбы схлопываются в HashSet в одно.
+ */
+static CellPos ComputeReachable(const Level *level, const CellPos *boxes, int nb,
+                                CellPos start_pos, uint8_t *reachable)
+{
+    // временный буфер на стеке используется, если вызывающий передал reachable == NULL
+    uint8_t local_vis[MAX_FIELD * MAX_FIELD];
+    uint8_t *vis = reachable ? reachable : local_vis;
+    memset(vis, 0, sizeof(uint8_t) * MAX_FIELD * MAX_FIELD);
+
+    // помечаем все ящики двойкой заранее: так и BFS в них не пойдёт,
+    // и в SolveLevel можно за O(1) проверить, свободна ли клетка push_to от ящиков
+    for (int i = 0; i < nb; i++)
+        vis[boxes[i]] = 2;
+
+    // head — откуда читаем, tail — куда дописываем
+    CellPos queue[MAX_FIELD * MAX_FIELD];
+    int head = 0, tail = 0;
+
+    // стартуем
+    vis[start_pos] = 1;
+    queue[tail++] = start_pos;
+    CellPos min_pos = start_pos;
+
+    // пока в очереди есть непосещённые соседи — расширяем достижимую область
+    while (head < tail)
+    {
+        CellPos cur = queue[head++];
+        int cx = cur % MAX_FIELD;
+        int cy = cur / MAX_FIELD;
+
+        // пробуем шагнуть в 4 стороны
+        for (int d = 0; d < 4; d++)
+        {
+            int nx = cx + SDX[d];
+            int ny = cy + SDY[d];
+            if (nx < 0 || nx >= level->width || ny < 0 || ny >= level->height) continue;
+            if (level->cells[ny][nx] == CELL_WALL) continue;
+
+            CellPos npos = (CellPos)(ny * MAX_FIELD + nx);
+            // пропускаем, если уже посещали (1) или там стоит ящик (2)
+            if (vis[npos]) continue;
+
+            vis[npos] = 1;
+            if (npos < min_pos) min_pos = npos; // обновляем канонический минимум
+            queue[tail++] = npos;               // добавляем клетку в хвост очереди
+        }
+    }
+    return min_pos;
+}
 
 /*
- * SolveLevel — запускает A* поиск от начального состояния уровня.
+ * FindWalkPath — поиск кратчайшего маршрута ходьбы игрока от клетки from до to
+ * без перемещения ящиков
  *
- * Возвращает true и заполняет solver->moves последовательностью
- * направлений (индексы 0..3 = вверх/вниз/влево/вправо), если решение
- * найдено. Иначе возвращает false.
+ * Записывает направления шагов (0..3) в буфер out_dirs (в прямом порядке: от from к to)
+ * и возвращает количество шагов (или -1, если путь не найден).
+ */
+static int FindWalkPath(const Level *level, const CellPos *boxes, int nb,
+                        CellPos from, CellPos to, int *out_dirs)
+{
+    // игрок уже стоит на нужной клетке
+    if (from == to) return 0;
+
+    uint8_t vis[MAX_FIELD * MAX_FIELD];       // 1 — клетка занята ящиком или уже посещена
+    CellPos parent_pos[MAX_FIELD * MAX_FIELD];// из какой клетки пришли в данную (для отката пути)
+    int8_t parent_dir[MAX_FIELD * MAX_FIELD]; // каким направлением (0..3) пришли в данную клетку
+    CellPos queue[MAX_FIELD * MAX_FIELD];     // очередь BFS
+
+    memset(vis, 0, sizeof(vis));
+    // помечаем текущие ящики как непроходимые препятствия
+    for (int i = 0; i < nb; i++)
+        vis[boxes[i]] = 1;
+
+    int head = 0, tail = 0;
+    vis[from] = 1;
+    queue[tail++] = from;
+
+    // флаг: дошли ли мы до целевой клетки to
+    int reached = 0;
+    while (head < tail)
+    {
+        CellPos cur = queue[head++];
+        int cx = cur % MAX_FIELD;
+        int cy = cur / MAX_FIELD;
+
+        for (int d = 0; d < 4; d++)
+        {
+            int nx = cx + SDX[d];
+            int ny = cy + SDY[d];
+            if (nx < 0 || nx >= level->width || ny < 0 || ny >= level->height) continue;
+            if (level->cells[ny][nx] == CELL_WALL) continue;
+
+            CellPos npos = (CellPos)(ny * MAX_FIELD + nx);
+            if (vis[npos]) continue;
+
+            vis[npos] = 1;
+            parent_pos[npos] = cur;      // запоминаем предка, чтобы потом восстановить маршрут
+            parent_dir[npos] = (int8_t)d;// запоминаем направление шага
+            if (npos == to) { reached = 1; break; } // цель достигнута — дальше искать не нужно
+            queue[tail++] = npos;
+        }
+        if (reached) break;
+    }
+    if (!reached) return -1;
+
+    // восстанавливаем маршрут с конца (от to к from)
+    int len = 0;
+    CellPos p = to;
+    while (p != from)
+    {
+        out_dirs[len++] = parent_dir[p];
+        p = parent_pos[p];
+    }
+
+    // разворачиваем массив шагов, чтобы они шли в прямом порядке (от from к to)
+    for (int i = 0; i < len / 2; i++)
+    {
+        int tmp = out_dirs[i];
+        out_dirs[i] = out_dirs[len - 1 - i];
+        out_dirs[len - 1 - i] = tmp;
+    }
+    return len;
+}
+
+/*
+ * SolveLevel — запускает Push-based A* поиск с канонизацией игрока.
  *
- * Общая схема A*:
- *   1. Создать начальный узел, поместить в open list (MinHeap).
- *   2. Пока open list не пуст:
- *      a. Извлечь узел cur с наименьшим f = g + h.
- *      b. Если cur — целевое состояние (все ящики на целях) — путь найден.
- *      c. Для каждого из 4 направлений попробовать сделать шаг:
- *         - Если новая клетка — стена, пропустить.
- *         - Если новая клетка — ящик, попробовать толкнуть его дальше;
- *           если ящик упирается в стену или другой ящик — пропустить.
- *         - Если после толчка возник дедлок — пропустить.
- *         - Если новое состояние уже в closed list — пропустить.
- *         - Иначе создать дочерний узел и добавить в open list.
- *   3. Если путь найден, восстановить его, идя по цепочке parent.
+ * Главная идея:
+ *   Один переход (ребро графа) = один толчок ящика.
+ *   Позиция игрока в PackedState хранится в каноническом виде — как минимальный
+ *   индекс клетки в связной области игрока. Благодаря этому все шаги пустой ходьбы
+ *   по комнате схлопываются в одно состояние.
+ *
+ * Возвращает true и заполняет solver->moves полной последовательностью
+ * направлений (ходьба + толчки), если решение найдено. Иначе false.
  */
 bool SolveLevel(const Level *level, Solver *solver)
 {
     int nb = level->num_boxes;
     bool success = false;
 
-    // Инициализация трёх структур данных
-    NodePool *pool  = CreateNodePool(NODES_INIT_CAP);
-    MinHeap  *open  = CreateHeap(HEAP_INIT_CAP);
-    HashSet  *closed = CreateHashSet(HASH_INIT_CAP);
+    NodePool *pool   = CreateNodePool(NODES_INIT_CAP); // хранилище всех созданных узлов
+    MinHeap  *open   = CreateHeap(HEAP_INIT_CAP);      // открытый список (приоритет по min f)
+    HashSet  *closed = CreateHashSet(HASH_INIT_CAP);   // закрытый список (отсечка дубликатов)
 
     if (!pool || !open || !closed)
         goto cleanup;
 
-    // Кодируем цели в uint16_t и сортируем для сравнения с состояниями
-    uint16_t goals[MAX_BOXES];
+    // кодируем целевые клетки в CellPos и сортируем
+    CellPos goals[MAX_BOXES];
     for (int i = 0; i < nb; i++)
-        goals[i] = (uint16_t)(level->goals[i].y * MAX_FIELD + level->goals[i].x);
+        goals[i] = (CellPos)(level->goals[i].y * MAX_FIELD + level->goals[i].x);
     SortBoxes(goals, nb);
 
-    // Создаём корневой узел (начальное состояние)
     {
         AStarNode root;
-        root.state.player = (uint16_t)(level->player.y * MAX_FIELD + level->player.x);
         for (int i = 0; i < nb; i++)
-            root.state.boxes[i] = (uint16_t)(level->boxes[i].y * MAX_FIELD + level->boxes[i].x);
-        SortBoxes(root.state.boxes, nb); // нормализуем порядок ящиков
-        root.parent = -1;      // корень не имеет родителя
-        root.direction = -1;   // корень не имеет направления
-        root.g = 0;            // стоимость пути от старта = 0
-        root.f = Heuristic(root.state.boxes, goals, nb); // f = g + h = 0 + h
+            root.state.boxes[i] = (CellPos)(level->boxes[i].y * MAX_FIELD + level->boxes[i].x);
+        SortBoxes(root.state.boxes, nb);
+
+        CellPos start_player = (CellPos)(level->player.y * MAX_FIELD + level->player.x);
+        root.state.player = ComputeReachable(level, root.state.boxes, nb, start_player, NULL);
+        root.parent = -1;      // у корня нет родителя
+        root.direction = -1;   // к корню не вёл никакой толчок
+        root.push_box = 0;
+        root.g = 0;            // сделано 0 толчков
+        root.f = Heuristic(root.state.boxes, goals, nb); // f = 0 + h
 
         int root_idx = PoolAdd(pool, &root);
         if (root_idx < 0) goto cleanup;
         HeapPush(open, pool, root_idx);
-        HashSetInsert(closed, &root.state, nb); // сразу помечаем как посещённый
+        HashSetInsert(closed, &root.state, nb);
     }
 
-    int found = -1;      // индекс найденного целевого узла (-1 = не найден)
+    int found = -1;
     int iterations = 0;
 
-    // Главный цикл A*
+    // главный цикл Push-based A*
     while (open->size > 0 && iterations < MAX_ITERATIONS)
     {
         iterations++;
 
-        // Извлекаем узел с наименьшим f из open list
+        // извлекаем самый перспективный узел (с минимальным f = g + h)
         int cur_idx = HeapPop(open, pool);
         if (cur_idx < 0) break;
 
-        /*
-         * Копируем данные текущего узла на стек.
-         * Это критически важно: PoolAdd внутри цикла может вызвать realloc,
-         * после чего pool->data укажет на новый адрес, а старые указатели
-         * на элементы массива станут невалидными. Работая с локальными
-         * копиями cur_state и cur_g, мы избегаем use-after-realloc.
-         */
         PackedState cur_state = pool->data[cur_idx].state;
         int cur_g = pool->data[cur_idx].g;
 
-        // Проверка победы: все ящики совпадают с отсортированными целями
+        // проверка победы
         int won = 1;
         for (int i = 0; i < nb; i++)
             if (cur_state.boxes[i] != goals[i]) { won = 0; break; }
         if (won) { found = cur_idx; break; }
 
-        // Текущая позиция игрока
-        int px = cur_state.player % MAX_FIELD;
-        int py = cur_state.player / MAX_FIELD;
+        // один BFS на весь узел: отмечаем достижимые клетки игрока (1) и ящики (2)
+        uint8_t reachable[MAX_FIELD * MAX_FIELD];
+        ComputeReachable(level, cur_state.boxes, nb, cur_state.player, reachable);
 
-        // Раскрытие узла: пробуем все 4 направления
-        for (int d = 0; d < 4; d++)
+        // перебираем все возможные толчки: каждый ящик bi и каждое из 4 направлений d
+        for (int bi = 0; bi < nb; bi++)
         {
-            int nx = px + SDX[d]; // куда шагает игрок
-            int ny = py + SDY[d];
+            CellPos box_pos = cur_state.boxes[bi]; // текущая клетка ящика до толчка
+            int bx = box_pos % MAX_FIELD;
+            int by = box_pos / MAX_FIELD;
 
-            // Проверяем границы и стены
-            if (nx < 0 || nx >= level->width || ny < 0 || ny >= level->height) continue;
-            if (level->cells[ny][nx] == CELL_WALL) continue;
-
-            uint16_t npos = (uint16_t)(ny * MAX_FIELD + nx); // новая позиция игрока
-
-            // Копируем ящики из локальной копии состояния (а не из pool->data!)
-            uint16_t new_boxes[MAX_BOXES];
-            memcpy(new_boxes, cur_state.boxes, sizeof(uint16_t) * nb);
-
-            int box_idx = IsBoxAt(new_boxes, nb, npos);
-
-            if (box_idx != -1) // на пути ящик — пытаемся его толкнуть
+            for (int d = 0; d < 4; d++)
             {
-                int bnx = nx + SDX[d]; // куда полетит ящик
-                int bny = ny + SDY[d];
-                if (bnx < 0 || bnx >= level->width || bny < 0 || bny >= level->height) continue;
-                if (level->cells[bny][bnx] == CELL_WALL) continue; // ящик упёрся в стену
-                uint16_t bpos = (uint16_t)(bny * MAX_FIELD + bnx);
-                if (IsBoxAt(new_boxes, nb, bpos) != -1) continue; // ящик упёрся в другой ящик
+                int fx = bx - SDX[d]; // push_from: откуда толкает игрок
+                int fy = by - SDY[d];
+                int tx = bx + SDX[d]; // push_to: куда сдвинется ящик
+                int ty = by + SDY[d];
 
-                new_boxes[box_idx] = bpos; // перемещаем ящик
+                if (fx < 0 || fx >= level->width || fy < 0 || fy >= level->height) continue;
+                if (tx < 0 || tx >= level->width || ty < 0 || ty >= level->height) continue;
+
+                // может ли игрок дойти до клетки за ящиком?
+                CellPos from_pos = (CellPos)(fy * MAX_FIELD + fx);
+                if (reachable[from_pos] != 1) continue;
+
+                // свободна ли клетка перед ящиком от стен и других ящиков?
+                if (level->cells[ty][tx] == CELL_WALL) continue;
+                CellPos to_pos = (CellPos)(ty * MAX_FIELD + tx);
+                if (reachable[to_pos] == 2) continue;
+
+                // формируем новую расстановку ящиков с передвинутым ящиком bi
+                CellPos new_boxes[MAX_BOXES];
+                memcpy(new_boxes, cur_state.boxes, sizeof(CellPos) * nb);
+                new_boxes[bi] = to_pos;
+
+                if (IsDeadState(level, new_boxes, nb, goals))
+                    continue;
+
+                // сортируем ящики, чтобы порядок в массиве не зависел от номера ящика
+                SortBoxes(new_boxes, nb);
+
+                // после толчка игрок оказывается на старой клетке ящика (box_pos).
+                // находим канонический минимум новой области достижимости игрока.
+                PackedState ns;
+                ns.player = ComputeReachable(level, new_boxes, nb, box_pos, NULL);
+                memcpy(ns.boxes, new_boxes, sizeof(CellPos) * nb);
+
+                // если такая расстановка ящиков + область игрока уже были — пропускаем
+                if (!HashSetInsert(closed, &ns, nb))
+                    continue;
+
+                // собираем дочерний узел: запоминаем box_pos и направление d для восстановления пути
+                AStarNode child;
+                child.state = ns;
+                child.parent = cur_idx;
+                child.direction = d;
+                child.push_box = box_pos;
+                child.g = cur_g + 1; // +1 толчок
+                child.f = child.g + Heuristic(new_boxes, goals, nb);
+
+                int child_idx = PoolAdd(pool, &child);
+                if (child_idx < 0) goto done; // кончилась память пула
+
+                if (!HeapPush(open, pool, child_idx))
+                    goto done;
             }
-
-            // Отсекаем дедлоки: если после толчка возник тупик — пропускаем
-            if (box_idx != -1 && IsDeadState(level, new_boxes, nb, goals))
-                continue;
-
-            // Нормализуем порядок ящиков для однозначного представления состояния
-            SortBoxes(new_boxes, nb);
-
-            // Формируем новое состояние
-            PackedState ns;
-            ns.player = npos;
-            memcpy(ns.boxes, new_boxes, sizeof(uint16_t) * nb);
-
-            // Проверяем, посещали ли мы это состояние раньше
-            if (!HashSetInsert(closed, &ns, nb))
-                continue; // уже в closed list — пропускаем
-
-            // Создаём дочерний узел: g увеличивается на 1 (один ход),
-            // f = g + h(нового состояния)
-            AStarNode child;
-            child.state = ns;
-            child.parent = cur_idx;  // ссылка на родителя для восстановления пути
-            child.direction = d;     // направление, которым был сделан этот ход
-            child.g = cur_g + 1;
-            child.f = child.g + Heuristic(new_boxes, goals, nb);
-
-            int child_idx = PoolAdd(pool, &child);
-            if (child_idx < 0) goto done; // закончилась память
-
-            if (!HeapPush(open, pool, child_idx))
-                goto done;
         }
     }
 
@@ -646,38 +772,105 @@ done:
     if (found >= 0)
     {
         /*
-         * Восстановление пути от финального узла до корня.
-         *
-         * Идём по цепочке parent-указателей, считаем длину пути,
-         * затем заполняем массив moves в обратном порядке (от старта к финишу).
+         * Восстановление полного маршрута для игры (solver->moves).
+         * Поэтому сначала выписываем цепочку толчков от старта к победе, а затем
+         * проигрываем уровень с самого начала и перед каждым толчком дописываем
+         * короткий путь ходьбы (FindWalkPath).
          */
 
-        // Первый проход: считаем длину пути
-        int path_len = 0;
+        // шаг 1: считаем длину цепочки толчков, поднимаясь от found к корню
+        int num_pushes = 0;
         int idx = found;
-        while (idx > 0) // корень имеет parent = -1, его не считаем
+        while (idx > 0)
         {
-            path_len++;
+            num_pushes++;
             idx = pool->data[idx].parent;
         }
 
-        solver->moves = (int *)malloc(sizeof(int) * path_len);
-        if (solver->moves)
-        {
-            solver->num_moves = path_len;
-            solver->current_move = 0;
-            solver->active = true;
-            solver->timer = 0;
+        // временные массивы для толчков в прямом порядке (от первого к последнему)
+        CellPos *push_boxes = (CellPos *)malloc(sizeof(CellPos) * (num_pushes > 0 ? num_pushes : 1));
+        int *push_dirs      = (int *)malloc(sizeof(int) * (num_pushes > 0 ? num_pushes : 1));
 
-            // Второй проход: заполняем moves с конца к началу
+        if (push_boxes && push_dirs)
+        {
+            // заполняем массивы с конца к началу, идя по parent-ссылкам от цели к корню
             idx = found;
-            for (int i = path_len - 1; i >= 0; i--)
+            for (int i = num_pushes - 1; i >= 0; i--)
             {
-                solver->moves[i] = pool->data[idx].direction;
+                push_boxes[i] = pool->data[idx].push_box;
+                push_dirs[i]  = pool->data[idx].direction;
                 idx = pool->data[idx].parent;
             }
-            success = true;
+
+            // шаг 2: виртуальная симуляция уровня от исходного положения игрока и ящиков
+            CellPos sim_player = (CellPos)(level->player.y * MAX_FIELD + level->player.x);
+            CellPos sim_boxes[MAX_BOXES];
+            for (int i = 0; i < nb; i++)
+                sim_boxes[i] = (CellPos)(level->boxes[i].y * MAX_FIELD + level->boxes[i].x);
+
+            // итоговый буфер ходов (динамический, т.к. заранее неизвестно, сколько шагов ходьбы добавится)
+            int cap = num_pushes * 8 + 16;
+            int *moves = (int *)malloc(sizeof(int) * cap);
+            int total_moves = 0;                 // сколько шагов уже записано в moves
+            int walk_dirs[MAX_FIELD * MAX_FIELD];// буфер для одного участка ходьбы от FindWalkPath
+            int ok = (moves != NULL);            // флаг успешности всех аллокаций и поисков пути
+
+            // проходим по каждому толчку p в прямом порядке
+            for (int p = 0; p < num_pushes && ok; p++)
+            {
+                CellPos bpos = push_boxes[p]; // где стоит ящик перед p-м толчком
+                int dir = push_dirs[p];       // в какую сторону его нужно толкнуть
+                int bx = bpos % MAX_FIELD;
+                int by = bpos / MAX_FIELD;
+
+                // push_from — куда игрок должен подойти, push_to — куда встанет ящик после толчка
+                CellPos push_from = (CellPos)((by - SDY[dir]) * MAX_FIELD + (bx - SDX[dir]));
+                CellPos push_to   = (CellPos)((by + SDY[dir]) * MAX_FIELD + (bx + SDX[dir]));
+
+                // ищем кратчайший путь ходьбы от текущей позиции sim_player до push_from
+                int wlen = FindWalkPath(level, sim_boxes, nb, sim_player, push_from, walk_dirs);
+                if (wlen < 0) { ok = 0; break; }
+
+                // при нехватке места в итоговом массиве moves — расширяем буфер (×2)
+                if (total_moves + wlen + 1 > cap)
+                {
+                    int new_cap = cap * 2;
+                    while (new_cap < total_moves + wlen + 1) new_cap *= 2;
+                    int *tmp = (int *)realloc(moves, sizeof(int) * new_cap);
+                    if (!tmp) { ok = 0; break; }
+                    moves = tmp;
+                    cap = new_cap;
+                }
+
+                // дописываем сначала шаги подхода к ящику, затем сам шаг толчка
+                for (int w = 0; w < wlen; w++)
+                    moves[total_moves++] = walk_dirs[w];
+                moves[total_moves++] = dir;
+
+                // обновляем состояние виртуальной симуляции: ящик уехал в push_to, игрок встал в bpos
+                int bi = IsBoxAt(sim_boxes, nb, bpos);
+                if (bi < 0) { ok = 0; break; }
+                sim_boxes[bi] = push_to;
+                sim_player = bpos;
+            }
+
+            if (ok)
+            {
+                solver->moves = moves;
+                solver->num_moves = total_moves;
+                solver->current_move = 0;
+                solver->active = true;
+                solver->timer = 0;
+                success = true;
+            }
+            else
+            {
+                free(moves);
+            }
         }
+
+        free(push_boxes);
+        free(push_dirs);
     }
 
     printf("[solver] iterations=%d  pool=%d  hash=%d  found=%s\n",
