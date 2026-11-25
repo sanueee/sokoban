@@ -1,0 +1,7 @@
+cycles:          21748486679
+instructions:    48946037912  (IPC = 2.25)
+branches:        9853692001
+branch_mispred:  114973905  (1.17%)
+l1d_miss_ld:     121468011
+l1d_miss_st:     34379709
+l1d_miss_total:  155847720  (3.18 MPKI)

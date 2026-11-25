@@ -3,3 +3,10 @@ build/
 .DS_Store
 .cache
 *.ps1
+*.o
+*.obj
+*.out
+*.s
+*.trace/
+compile_commands.json
+tests/bench_results.csv
