@@ -1,0 +1,80 @@
+
+"AMD uProf (Version:6.0.1520.0)"
+PERFORMANCE ANALYSIS REPORT
+
+EXECUTION
+Target Path:,".\sokoban_bench.exe"
+Command Line Arguments:,"5 "
+Working Directory:,"C:\Users\ryche\Desktop\course\sokoban_v3\build"
+Environment Variables:
+CPU Details:,"Family(0x17), Model(0x60), Number of Cores(6)"
+Operating System:,"Win1125H2-64"
+Profile Command:,"AMDuProfCLI.exe profile -e event=pmcx76,interval=250000 -e event=pmcxc0,interval=250000 -e event=pmcxc3,interval=25000 -e event=pmcx60,umask=0xc8,interval=25000 -o C:\Users\ryche\Desktop\course\uprof_abs_v3 .\sokoban_bench.exe 5"
+
+PROFILE DETAILS
+Profile Session Type:,"Custom Profile"
+Profile Scope:,"Single Application"
+CPU Mask:,"0-5"
+CPU Affinity Mask:,"0-5"
+Profile Start Time:,"Thu Nov 26 23:56:20 2026"
+Profile End Time:,"Thu Nov 26 23:56:22 2026"
+Profile Duration:,"2.350 seconds"
+Data Folder:,"C:\Users\ryche\Desktop\course\uprof_abs_v3"
+Virtual Machine:,"No"
+Call Stack Sampling:,"False"
+Selected View:,"All Events"
+
+MONITORED EVENTS
+PMC Events:,Name,Interval,Unitmask,Countmask,Invert Countmask,User,OS,Description
+,"CYCLES_NOT_IN_HALT (PMCx076)",250000,0x00,0x00,False,True,True,"The number of cpu cycles when the thread is not in halt state."
+,"RETIRED_INST (PMCx0C0)",250000,0x00,0x00,False,True,True,"The number of instructions retired from execution. This count includes exceptions and interrupts. Each exception or interrupt is counted as one instruction."
+,"RETIRED_BR_INST_MISP (PMCx0C3)",25000,0x00,0x00,False,True,True,"The number of retired branch instructions, that were mispredicted.Note that only EX direct mispredicts and indirect target mispredicts are counted
+            "
+,"L2_CACHE_ACCESS_FROM_L1_DC_MISS (PMCx060)",25000,0xC8,0x00,False,True,True,"The L2 cache access requests due to L1 data cache misses. This also counts hardware and software prefetches."
+
+
+DERIVED METRICS
+Metric Name,Expression,Description
+"IPC","RETIRED_INST / CYCLES_NOT_IN_HALT","The average number of retired instructions per CPU Cycle. The lower IPC value means the application consumes more cycles due to  cache misses, branch mispredictions, pipeline stalls, I/O or any other performance bottlenecks."
+"CPI","CYCLES_NOT_IN_HALT / RETIRED_INST","The average number of CPU cycles consumed to retire an instruction. This metric is computed as the ratio of CYCLES_NOT_IN_HALT to RETIRED_INST event. The higher values means the application consumes more CPU cycles to retire an instruction due to high cache misses, branch mispredictions, pipeline stalls, I/O or any other bottlenecks. If the CPI values exceeds a threshold value, it will be highlighted in pink."
+"RETIRED_BR_INST_MISP (PTI)","( RETIRED_BR_INST_MISP * 1000 ) / RETIRED_INST","The number of retired mispredicted branches per thousand retired instructions. Branch mispredictions incur significant performance penalty and this metric value should be reduced."
+"L1_DC_MISSES (PTI)","( L2_CACHE_ACCESS_FROM_L1_DC_MISS * 1000 ) / RETIRED_INST","The number of L2 cache access requests due to L1 data cache misses, per thousand retired instructions. This L2 cache access requests also includes the hardware and software prefetches."
+"L1_DC_MISS_RATE","L2_CACHE_ACCESS_FROM_L1_DC_MISS / RETIRED_INST","The L1 Data Cache miss rate is the number of L1 Data Cache misses divided by the total number of retired instructions."
+"L2_CACHE_ACCESSES_FROM_DC_MISSES (PTI)","( L2_CACHE_ACCESS_FROM_L1_DC_MISS * 1000 ) / RETIRED_INST","The number of L2 cache access requests due to L1 data cache misses, per thousand retired instructions. This L2 cache access requests also includes the hardware and software prefetches."
+"RETIRED_BR_INST_MISP_RATE","RETIRED_BR_INST_MISP / RETIRED_INST","This metric is computed as retired mispredicted branches divided by the total number of retired instructions."
+
+
+APPLICATION PERFORMANCE SNAPSHOT
+Thread Count,"4"
+
+
+"10 HOTTEST FUNCTIONS (Sort Event - CYCLES_NOT_IN_HALT)"
+FUNCTION,"CYCLES_NOT_IN_HALT","RETIRED_INST","IPC","CPI","RETIRED_BR_INST_MISP (PTI)","L1_DC_MISSES (PTI)","RETIRED_BR_INST_MISP","L2_CACHE_ACCESS_FROM_L1_DC_MISS","L1_DC_MISS_RATE","L2_CACHE_ACCESSES_FROM_DC_MISSES (PTI)","RETIRED_BR_INST_MISP_RATE",Module
+"GenerateLevel",1686.0000,2643.0000,1.5676,0.6379,2.5728,0.0378,68.0000,1.0000,0.0000,0.0378,0.0026,"c:\users\ryche\desktop\course\sokoban_v3\build\sokoban_bench.exe"
+"CarveMaze",25.0000,41.0000,1.6400,0.6098,7.3171,2.4390,3.0000,1.0000,0.0024,2.4390,0.0073,"c:\users\ryche\desktop\course\sokoban_v3\build\sokoban_bench.exe"
+"ComputeReachable",22.0000,57.0000,2.5909,0.3860,5.2632,0.0000,3.0000,0.0000,0.0000,0.0000,0.0053,"c:\users\ryche\desktop\course\sokoban_v3\build\sokoban_bench.exe"
+"SolveLevel",8.0000,25.0000,3.1250,0.3200,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,"c:\users\ryche\desktop\course\sokoban_v3\build\sokoban_bench.exe"
+"Heuristic",2.0000,2.0000,1.0000,1.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,"c:\users\ryche\desktop\course\sokoban_v3\build\sokoban_bench.exe"
+"ntdll.dll!0x18003c579",2.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,"c:\windows\system32\ntdll.dll"
+"ntdll.dll!0x18003c664",1.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,"c:\windows\system32\ntdll.dll"
+"ntoskrnl.exe!0x140272626",1.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,"c:\windows\system32\ntoskrnl.exe"
+"ntoskrnl.exe!0x1402a8fa3",1.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,"c:\windows\system32\ntoskrnl.exe"
+"ntoskrnl.exe!0x140272d94",1.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,"c:\windows\system32\ntoskrnl.exe"
+
+"10 HOTTEST PROCESSES (Sort Event - CYCLES_NOT_IN_HALT)"
+PROCESS,"CYCLES_NOT_IN_HALT","RETIRED_INST","IPC","CPI","RETIRED_BR_INST_MISP (PTI)","L1_DC_MISSES (PTI)","RETIRED_BR_INST_MISP","L2_CACHE_ACCESS_FROM_L1_DC_MISS","L1_DC_MISS_RATE","L2_CACHE_ACCESSES_FROM_DC_MISSES (PTI)","RETIRED_BR_INST_MISP_RATE"
+"c:\users\ryche\desktop\course\sokoban_v3\build\sokoban_bench.exe (PID:6944)",1757.0000,2778.0000,1.5811,0.6325,2.7358,0.1440,76.0000,4.0000,0.0001,0.1440,0.0027
+
+"10 HOTTEST MODULES (Sort Event - CYCLES_NOT_IN_HALT)"
+MODULE,"CYCLES_NOT_IN_HALT","RETIRED_INST","IPC","CPI","RETIRED_BR_INST_MISP (PTI)","L1_DC_MISSES (PTI)","RETIRED_BR_INST_MISP","L2_CACHE_ACCESS_FROM_L1_DC_MISS","L1_DC_MISS_RATE","L2_CACHE_ACCESSES_FROM_DC_MISSES (PTI)","RETIRED_BR_INST_MISP_RATE"
+"c:\users\ryche\desktop\course\sokoban_v3\build\sokoban_bench.exe",1744.0000,2770.0000,1.5883,0.6296,2.6715,0.0722,74.0000,2.0000,0.0001,0.0722,0.0027
+"c:\windows\system32\ntoskrnl.exe",9.0000,4.0000,0.4444,2.2500,50.0000,50.0000,2.0000,2.0000,0.0500,50.0000,0.0500
+"c:\windows\system32\ntdll.dll",4.0000,3.0000,0.7500,1.3333,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000
+"c:\windows\system32\ucrtbase.dll",0.0000,1.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000
+
+"10 HOTTEST THREADS (Sort Event - CYCLES_NOT_IN_HALT)"
+THREAD,"CYCLES_NOT_IN_HALT","RETIRED_INST","IPC","CPI","RETIRED_BR_INST_MISP (PTI)","L1_DC_MISSES (PTI)","RETIRED_BR_INST_MISP","L2_CACHE_ACCESS_FROM_L1_DC_MISS","L1_DC_MISS_RATE","L2_CACHE_ACCESSES_FROM_DC_MISSES (PTI)","RETIRED_BR_INST_MISP_RATE",THREAD ID
+"Thread-6876 (PID:6944)",1750.0000,2775.0000,1.5857,0.6306,2.7027,0.1441,75.0000,4.0000,0.0001,0.1441,0.0027,"6876"
+"Thread-9444 (PID:6944)",6.0000,2.0000,0.3333,3.0000,50.0000,0.0000,1.0000,0.0000,0.0000,0.0000,0.0500,"9444"
+"Thread-7872 (PID:6944)",1.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,"7872"
+"Thread-13168 (PID:6944)",0.0000,1.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,"13168"

@@ -1,0 +1,100 @@
+
+"AMD uProf (Version:6.0.1520.0)"
+PERFORMANCE ANALYSIS REPORT
+
+EXECUTION
+Target Path:,".\sokoban_bench.exe"
+Command Line Arguments:,"5 "
+Working Directory:,"C:\Users\ryche\Desktop\course\sokoban_v2\build"
+Environment Variables:
+CPU Details:,"Family(0x17), Model(0x60), Number of Cores(6)"
+Operating System:,"Win1125H2-64"
+Profile Command:,"AMDuProfCLI.exe profile --config assess_ext -o C:\Users\ryche\Desktop\course\sokoban\uprof_v2 .\sokoban_bench.exe 5"
+
+PROFILE DETAILS
+Profile Session Type:,"Assess Performance (Extended)"
+Profile Scope:,"Single Application"
+CPU Mask:,"0-5"
+CPU Affinity Mask:,"0-5"
+Profile Start Time:,"Thu Nov 26 23:29:09 2026"
+Profile End Time:,"Thu Nov 26 23:29:12 2026"
+Profile Duration:,"2.848 seconds"
+Data Folder:,"C:\Users\ryche\Desktop\course\sokoban\uprof_v2"
+Virtual Machine:,"No"
+Call Stack Sampling:,"False"
+Selected View:,"Overall Assessment (Extended)"
+
+MONITORED EVENTS
+PMC Events:,Name,Interval,Unitmask,Countmask,Invert Countmask,User,OS,Description
+,"MISALIGNED_LOADS (PMCx047)",25000,0x00,0x00,False,True,True,"The number of misaligned loads. On Zen3, this predefined counts the 64B (cacheline crossing) and 4K (page crossing) misaligned loads."
+,"CYCLES_NOT_IN_HALT (PMCx076)",250000,0x00,0x00,False,True,True,"The number of cpu cycles when the thread is not in halt state."
+,"RETIRED_INST (PMCx0C0)",250000,0x00,0x00,False,True,True,"The number of instructions retired from execution. This count includes exceptions and interrupts. Each exception or interrupt is counted as one instruction."
+,"RETIRED_BR_INST (PMCx0C2)",25000,0x00,0x00,False,True,True,"The number of branch instructions retired. This includes all types of architectural control flow changes, including exceptions and interrupts."
+,"RETIRED_BR_INST_MISP (PMCx0C3)",25000,0x00,0x00,False,True,True,"The number of retired branch instructions, that were mispredicted.Note that only EX direct mispredicts and indirect target mispredicts are counted
+            "
+,"L1_DEMAND_DC_REFILLS_LOCAL_L2 (PMCx043)",25000,0x01,0x00,False,True,True,"Counts all L2 Prefetches accepted by L2 pipeline which hit in the L2 Cache."
+,"LsBadStatus2.StliOther (PMCx024)",25000,0x02,0x00,False,True,True,"Bad Status 2"
+,"L1_DEMAND_DC_REFILLS_LOCAL_CACHE (PMCx043)",25000,0x02,0x00,False,True,True,"The demand Data Cache (DC) fills from same the cache of same CCX or cache of different CCX in the same package (node)."
+,"INEFFECTIVE_SW_PF (PMCx052)",25000,0x03,0x00,False,True,True,"The number of software prefetches that did not fetch data outside of the processor core. This predefined counts the Software PREFETCH instruction that saw a match on an already - allocated miss request buffer.Also counts the Software PREFETCH instruction that saw a DC hit."
+,"L1_DC_ACCESSES_ALL (PMCx029)",250000,0x07,0x00,False,True,True,"The number of load and store ops dispatched to LS unit. This counts the dispatch of single op that performs a memory load, dispatch of single op that performs a memory store, dispatch of a single op that performs a load from and store to the same memory address."
+,"L1_DEMAND_DC_REFILLS_LOCAL_DRAM (PMCx043)",25000,0x08,0x00,False,True,True,"The demand Data Cache (DC) fills from DRAM or IO connected in the same package (node)."
+,"FpDispFaults.YmmSpillFault.YmmFillFault.XmmFillFault (PMCx00E)",25000,0x0E,0x00,False,True,True,"Floating Point Dispatch Faults."
+,"L2_CACHE_ACCESS_FROM_L1_DC_MISS (PMCx060)",25000,0xC8,0x00,False,True,True,"The L2 cache access requests due to L1 data cache misses. This also counts hardware and software prefetches."
+
+
+DERIVED METRICS
+Metric Name,Expression,Description
+"CPI","CYCLES_NOT_IN_HALT / RETIRED_INST","The average number of CPU cycles consumed to retire an instruction. This metric is computed as the ratio of CYCLES_NOT_IN_HALT to RETIRED_INST event. The higher values means the application consumes more CPU cycles to retire an instruction due to high cache misses, branch mispredictions, pipeline stalls, I/O or any other bottlenecks. If the CPI values exceeds a threshold value, it will be highlighted in pink."
+"RETIRED_BR_INST (PTI)","( RETIRED_BR_INST * 1000 ) / RETIRED_INST","The number of retired branch instructions per thousand retired instructions."
+"%RETIRED_BR_INST_MISP","( RETIRED_BR_INST_MISP * 100 ) / RETIRED_BR_INST","The percentage of retired mispredicted branches with respect to the total number of retired branches."
+"L1_DC_ACCESSES (PTI)","( L1_DC_ACCESSES_ALL * 1000 ) / RETIRED_INST","The number of load and store operations per thousand instructions. This counts the dispatch of single op that performs a memory load, dispatch of single op that performs a memory store, dispatch of a single op that performs a load from and store to the same memory address"
+"%L1_DC_MISSES","( L2_CACHE_ACCESS_FROM_L1_DC_MISS * 100 ) / L1_DC_ACCESSES_ALL","The percentage of L2 cache access requests due to L1 data cache misses with respect to the total number of load and store operations. This also counts the hardware and software prefetches."
+"L1_DEMAND_DC_REFILLS_LOCAL_DRAM (PTI)","( L1_DEMAND_DC_REFILLS_LOCAL_DRAM * 1000 ) / RETIRED_INST","The number of demand data cache (DC) fills per thousand retired instructions. These demand DC fills are from DRAM or IO connected in the same package (node)."
+"L1_DEMAND_DC_REFILLS_LOCAL_CACHE (PTI)","( L1_DEMAND_DC_REFILLS_LOCAL_CACHE * 1000 ) / RETIRED_INST","The number of demand data cache (DC) fills per thousand retired instructions. These demand DC fills are from same the cache of same CCX or cache of different CCX in the same package (node)."
+"L1_DEMAND_DC_REFILLS_LOCAL_L2 (PTI)","( L1_DEMAND_DC_REFILLS_LOCAL_L2 * 1000 ) / RETIRED_INST","The number of demand data cache (DC) fills per thousand retired instructions. These DC fills are from local L2 cache to the core."
+"MISALIGNED_LOADS (PTI)","( MISALIGNED_LOADS * 1000 ) / RETIRED_INST","The number of misaligned loads per thousand retired instructions."
+"STLI_OTHER (PTI)","( LsBadStatus2.StliOther * 1000 ) / RETIRED_INST","Store-to-load conflicts: A load was unable to complete due to a non-forwardable conflict with an older store. Most commonly, a load's address range partially but not completely overlaps with an uncompleted older store. Software can avoid this problem by using same-size and same-alignment loads and stores when accessing the same data. Vector/SIMD code is particularly susceptible to this problem; software should construct wide vector stores by manipulating vector elements in registers using shuffle/blend/swap instructions prior to storing to memory, instead of using narrow element-by-element stores."
+"SSE_AVX_STALLS (PTC)","( FpDispFaults.YmmSpillFault.YmmFillFault.XmmFillFault * 1000 ) / CYCLES_NOT_IN_HALT","SSE AVX Dispatch Stalls."
+"INEFFECTIVE_SW_PF (PTI)","( INEFFECTIVE_SW_PF * 1000 ) / RETIRED_INST","The number of ineffective software prefetches per thousand instructions."
+
+
+APPLICATION PERFORMANCE SNAPSHOT
+Thread Count,"4"
+
+
+"10 HOTTEST FUNCTIONS (Sort Event - CYCLES_NOT_IN_HALT)"
+FUNCTION,"CYCLES_NOT_IN_HALT","RETIRED_INST","CPI","RETIRED_BR_INST (PTI)","%RETIRED_BR_INST_MISP","L1_DC_ACCESSES (PTI)","%L1_DC_MISSES","L1_DEMAND_DC_REFILLS_LOCAL_DRAM (PTI)","L1_DEMAND_DC_REFILLS_LOCAL_CACHE (PTI)","L1_DEMAND_DC_REFILLS_LOCAL_L2 (PTI)","MISALIGNED_LOADS (PTI)","STLI_OTHER (PTI)","SSE_AVX_STALLS (PTC)","INEFFECTIVE_SW_PF (PTI)",Module
+"GenerateLevel",6487.0000,9967.0000,0.6508,168.7067,1.5106,237.3834,0.0296,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.3311,"c:\users\ryche\desktop\course\sokoban_v2\build\sokoban_bench.exe"
+"ComputeReachable",456.0000,905.0000,0.5039,215.3591,2.7707,344.7514,0.2564,0.2210,0.0000,0.2210,0.1105,0.0000,0.0000,0.3315,"c:\users\ryche\desktop\course\sokoban_v2\build\sokoban_bench.exe"
+"SolveLevel",183.0000,277.0000,0.6606,237.9061,1.9727,415.1625,0.5217,0.0000,0.0000,0.0000,0.3610,0.3610,0.0000,0.0000,"c:\users\ryche\desktop\course\sokoban_v2\build\sokoban_bench.exe"
+"CarveMaze",114.0000,138.0000,0.8261,131.1594,8.2873,456.5217,0.0000,0.0000,0.0000,1.4493,0.0000,0.0000,0.0000,0.0000,"c:\users\ryche\desktop\course\sokoban_v2\build\sokoban_bench.exe"
+"HashSetInsert",59.0000,87.0000,0.6782,234.4828,1.4706,310.3448,0.3704,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,"c:\users\ryche\desktop\course\sokoban_v2\build\sokoban_bench.exe"
+"ntoskrnl.exe!0x1406cb02c",19.0000,43.0000,0.4419,216.2791,1.0753,372.0930,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,"c:\windows\system32\ntoskrnl.exe"
+"Heuristic",15.0000,32.0000,0.4688,156.2500,0.0000,437.5000,0.7143,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,"c:\users\ryche\desktop\course\sokoban_v2\build\sokoban_bench.exe"
+"ntoskrnl.exe!0x14022cf6e",10.0000,19.0000,0.5263,136.8421,0.0000,315.7895,5.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,"c:\windows\system32\ntoskrnl.exe"
+"ntoskrnl.exe!0x1402a8fa3",10.0000,16.0000,0.6250,87.5000,0.0000,125.0000,0.0000,0.0000,0.0000,0.0000,0.0000,6.2500,0.0000,0.0000,"c:\windows\system32\ntoskrnl.exe"
+"ntoskrnl.exe!0x1406cb181",9.0000,9.0000,1.0000,211.1111,0.0000,555.5556,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,"c:\windows\system32\ntoskrnl.exe"
+
+"10 HOTTEST PROCESSES (Sort Event - CYCLES_NOT_IN_HALT)"
+PROCESS,"CYCLES_NOT_IN_HALT","RETIRED_INST","CPI","RETIRED_BR_INST (PTI)","%RETIRED_BR_INST_MISP","L1_DC_ACCESSES (PTI)","%L1_DC_MISSES","L1_DEMAND_DC_REFILLS_LOCAL_DRAM (PTI)","L1_DEMAND_DC_REFILLS_LOCAL_CACHE (PTI)","L1_DEMAND_DC_REFILLS_LOCAL_L2 (PTI)","MISALIGNED_LOADS (PTI)","STLI_OTHER (PTI)","SSE_AVX_STALLS (PTC)","INEFFECTIVE_SW_PF (PTI)"
+"c:\users\ryche\desktop\course\sokoban_v2\build\sokoban_bench.exe (PID:10136)",7654.0000,11697.0000,0.6544,174.5405,1.7143,259.2118,0.1781,0.0256,0.0256,0.1368,0.0256,0.0855,0.0000,0.3163
+
+"10 HOTTEST MODULES (Sort Event - CYCLES_NOT_IN_HALT)"
+MODULE,"CYCLES_NOT_IN_HALT","RETIRED_INST","CPI","RETIRED_BR_INST (PTI)","%RETIRED_BR_INST_MISP","L1_DC_ACCESSES (PTI)","%L1_DC_MISSES","L1_DEMAND_DC_REFILLS_LOCAL_DRAM (PTI)","L1_DEMAND_DC_REFILLS_LOCAL_CACHE (PTI)","L1_DEMAND_DC_REFILLS_LOCAL_L2 (PTI)","MISALIGNED_LOADS (PTI)","STLI_OTHER (PTI)","SSE_AVX_STALLS (PTC)","INEFFECTIVE_SW_PF (PTI)"
+"c:\users\ryche\desktop\course\sokoban_v2\build\sokoban_bench.exe",7329.0000,11424.0000,0.6415,174.1859,1.7036,253.9391,0.0793,0.0175,0.0000,0.0350,0.0175,0.0088,0.0000,0.3151
+"c:\windows\system32\ntoskrnl.exe",244.0000,245.0000,0.9959,175.1020,1.8648,444.8980,2.2936,0.4082,1.2245,3.6735,0.4082,3.2653,0.0000,0.4082
+"c:\windows\system32\ntdll.dll",32.0000,18.0000,1.7778,255.5556,4.3478,666.6667,0.0000,0.0000,0.0000,5.5556,0.0000,0.0000,0.0000,0.0000
+"c:\windows\system32\driverstore\filerepository\u0360310.inf_amd64_e5e86d8d7d2d5caa\b359612\amdkmdag.sys",12.0000,2.0000,6.0000,50.0000,0.0000,500.0000,10.0000,0.0000,0.0000,0.0000,0.0000,50.0000,0.0000,0.0000
+"c:\windows\system32\drivers\rtwlane.sys",8.0000,2.0000,4.0000,450.0000,11.1111,500.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000
+"c:\windows\system32\drivers\ntfs.sys",4.0000,1.0000,4.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,100.0000,0.0000,0.0000,0.0000,0.0000
+"c:\windows\system32\drivers\wdf01000.sys",4.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000
+"c:\windows\system32\drivers\dxgmms2.sys",4.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000
+"c:\windows\system32\drivers\hidclass.sys",3.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000
+"c:\windows\system32\drivers\fltmgr.sys",2.0000,1.0000,2.0000,700.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000
+
+"10 HOTTEST THREADS (Sort Event - CYCLES_NOT_IN_HALT)"
+THREAD,"CYCLES_NOT_IN_HALT","RETIRED_INST","CPI","RETIRED_BR_INST (PTI)","%RETIRED_BR_INST_MISP","L1_DC_ACCESSES (PTI)","%L1_DC_MISSES","L1_DEMAND_DC_REFILLS_LOCAL_DRAM (PTI)","L1_DEMAND_DC_REFILLS_LOCAL_CACHE (PTI)","L1_DEMAND_DC_REFILLS_LOCAL_L2 (PTI)","MISALIGNED_LOADS (PTI)","STLI_OTHER (PTI)","SSE_AVX_STALLS (PTC)","INEFFECTIVE_SW_PF (PTI)",THREAD ID
+"Thread-12240 (PID:10136)",7642.0000,11694.0000,0.6535,174.5168,1.7101,259.1072,0.1782,0.0257,0.0257,0.1197,0.0257,0.0855,0.0000,0.3164,"12240"
+"Thread-9560 (PID:10136)",7.0000,2.0000,3.5000,250.0000,20.0000,500.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,"9560"
+"Thread-10820 (PID:10136)",5.0000,1.0000,5.0000,300.0000,0.0000,1000.0000,0.0000,0.0000,0.0000,100.0000,0.0000,0.0000,0.0000,0.0000,"10820"
+"Thread-1720 (PID:10136)",0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,"1720"
